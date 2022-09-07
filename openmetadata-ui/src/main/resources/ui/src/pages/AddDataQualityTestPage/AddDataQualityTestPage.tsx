@@ -44,7 +44,7 @@ const AddDataQualityTestPage = () => {
   }, [entityTypeFQN]);
 
   return (
-    <PageContainerV1>
+    <PageContainerV1 data-testid="add-data-quality-container">
       <div className="tw-self-center">
         <AddDataQualityTestV1 table={table} />
       </div>

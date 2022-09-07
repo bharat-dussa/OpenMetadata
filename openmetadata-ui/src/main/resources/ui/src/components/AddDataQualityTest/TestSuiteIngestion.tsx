@@ -176,7 +176,10 @@ const TestSuiteIngestion: React.FC<TestSuiteIngestionProps> = ({
   };
 
   return (
-    <Row className="tw-form-container" gutter={[16, 16]}>
+    <Row
+      className="tw-form-container"
+      data-testid="test-suite-ingestion"
+      gutter={[16, 16]}>
       <Col span={24}>
         <Typography.Paragraph
           className="tw-heading tw-text-base"

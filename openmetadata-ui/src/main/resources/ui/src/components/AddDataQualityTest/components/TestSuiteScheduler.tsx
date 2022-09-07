@@ -32,7 +32,7 @@ const TestSuiteScheduler: React.FC<TestSuiteSchedulerProps> = ({
   }, [initialData]);
 
   return (
-    <Row gutter={[16, 32]}>
+    <Row data-testid="test-suite-scheduler" gutter={[16, 32]}>
       <Col span={24}>
         <CronEditor
           value={repeatFrequency}
