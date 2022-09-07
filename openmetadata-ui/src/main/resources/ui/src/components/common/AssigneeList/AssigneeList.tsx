@@ -27,7 +27,7 @@ const AssigneeList: FC<Props> = ({ assignees, className }) => {
   const history = useHistory();
 
   return (
-    <span className={className}>
+    <span className={className} data-testid="assignee-list-popover">
       {assignees.map((assignee) => (
         <UserPopOverCard
           key={uniqueId()}
