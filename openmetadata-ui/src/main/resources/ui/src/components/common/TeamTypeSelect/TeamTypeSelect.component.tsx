@@ -42,7 +42,11 @@ function TeamTypeSelect({
   const options = useMemo(() => getTeamTypeOptions(showGroupOption), []);
 
   return (
-    <Space align="center" className="team-type-select" size={4}>
+    <Space
+      align="center"
+      className="team-type-select"
+      data-testid="team-type-select"
+      size={4}>
       <Select
         defaultActiveFirstOption
         options={options}
@@ -51,10 +55,12 @@ function TeamTypeSelect({
       />
       <Space className="edit-team-type-buttons" size={4}>
         <Button
+          data-testid="cancel-button"
           icon={<FontAwesomeIcon className="tw-w-3.5 tw-h-3.5" icon="xmark" />}
           onClick={handleCancel}
         />
         <Button
+          data-testid="submit-button"
           icon={<FontAwesomeIcon className="tw-w-3.5 tw-h-3.5" icon="check" />}
           onClick={handleSubmit}
         />

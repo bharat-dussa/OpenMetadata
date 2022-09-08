@@ -22,6 +22,10 @@ import {
 import { AdvancedFields } from '../enums/AdvancedSearch.enum';
 import { SearchIndex } from '../enums/search.enum';
 
+/**
+ * It returns a list of dropdown items based on the search index
+ * @param {string} index - The index you want to search.
+ */
 export const getDropDownItems = (index: string) => {
   switch (index) {
     case SearchIndex.TABLE:
@@ -46,12 +50,21 @@ export const getDropDownItems = (index: string) => {
   }
 };
 
+/**
+ * It takes a string and returns a string
+ * @param {string} key - The key of the dropdown item.
+ */
 export const getItemLabel = (key: string) => {
   const item = ALL_DROPDOWN_ITEMS.find((dItem) => dItem.key === key);
 
   return !isUndefined(item) ? item.label : 'label';
 };
 
+/**
+ * It takes a string and returns a string
+ * @param {string} field - The field you want to search on.
+ * @returns The AdvancedFields enum
+ */
 export const getAdvancedField = (field: string) => {
   switch (field) {
     case 'columns.name':

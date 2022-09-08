@@ -52,7 +52,9 @@ const TabsPane = ({
   };
 
   return (
-    <div className={classNames('tw-bg-transparent', className)}>
+    <div
+      className={classNames('tw-bg-transparent', className)}
+      data-testid="tabs-pane">
       <nav
         className="tw-flex tw-items-center tw-justify-between tw-gh-tabs-container"
         data-testid="tabs"
