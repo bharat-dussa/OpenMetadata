@@ -237,6 +237,7 @@ const ActivityFeedSettingsPage: React.FC = () => {
                           <Tree
                             checkable
                             defaultExpandAll
+                            data-testid="activity-feed-settings-tree"
                             defaultCheckedKeys={checkedKeys}
                             icon={null}
                             key={entityType}

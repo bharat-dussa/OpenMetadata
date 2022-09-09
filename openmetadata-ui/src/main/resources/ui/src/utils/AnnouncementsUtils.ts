@@ -14,6 +14,12 @@ export const validateMessages = {
   },
 };
 
+/**
+ * It returns true if the current time is between the start and end time
+ * @param {number} startTime - The time the announcement was created.
+ * @param {number} endTime - The time the announcement will end.
+ * @returns A function that takes in two parameters, startTime and endTime, and returns a boolean.
+ */
 export const isActiveAnnouncement = (startTime: number, endTime: number) => {
   const currentTime = Date.now() / 1000;
 

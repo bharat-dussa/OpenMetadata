@@ -265,6 +265,7 @@ const AddDataQualityTestV1: React.FC<AddDataQualityTestProps> = ({ table }) => {
   return (
     <PageLayout
       classes="tw-max-w-full-hd tw-h-full tw-pt-4"
+      data-testid="add-data-quality-test"
       header={<TitleBreadcrumb titleLinks={breadcrumb} />}
       layout={PageLayoutType['2ColRTL']}
       rightPanel={

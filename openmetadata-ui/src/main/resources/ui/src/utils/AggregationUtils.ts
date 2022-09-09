@@ -16,6 +16,13 @@ import { AggregationType, Sterm } from 'Models';
 import { getQueryParam } from '../constants/explore.constants';
 import { getFilterKey } from './FilterUtils';
 
+/**
+ * It takes an aggregation object and an aggregation type and returns an array of aggregation list
+ * @param aggregation - The aggregation object returned from the search API.
+ * @param [aggregationType] - The aggregation type you want to get. If you don't pass this parameter,
+ * it will return all the aggregation list.
+ * @returns An array of aggregation list.
+ */
 export const getAggregationList = (
   aggregation: Record<string, Sterm>,
   aggregationType = ''
@@ -35,6 +42,11 @@ export const getAggregationList = (
   return aggregationList;
 };
 
+/**
+ * It takes a query string and returns an array of aggregations
+ * @param {string} [qsSearch] - The query string from the URL.
+ * @returns An array of objects.
+ */
 export const getAggregationListFromQS = (qsSearch?: string) => {
   return [
     ...Object.entries(getQueryParam(qsSearch)).map((qEntry) => {

@@ -13,6 +13,12 @@
 
 import { TeamType } from '../../../generated/entity/teams/team';
 
+/**
+ * It returns an array of objects with a label and value property
+ * @param {boolean} showGroupOption - boolean - This is a boolean that determines whether or not the
+ * Group option should be shown in the dropdown.
+ * @returns An array of objects with a label and value property.
+ */
 export const getTeamTypeOptions = (showGroupOption: boolean) => {
   const teamTypesArray = Object.values(TeamType).filter((key) =>
     key === TeamType.Group ? showGroupOption : key !== TeamType.Organization
