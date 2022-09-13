@@ -442,7 +442,7 @@ describe('Test DashboardDetails component', () => {
         }
       );
 
-      const tagWrapper = getByTestId('tags-wrapper');
+      const tagWrapper = await getByTestId('tags-wrapper');
       fireEvent.click(
         tagWrapper,
         new MouseEvent('click', { bubbles: true, cancelable: true })
