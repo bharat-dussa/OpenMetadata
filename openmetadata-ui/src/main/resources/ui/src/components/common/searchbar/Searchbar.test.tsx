@@ -39,13 +39,17 @@ jest.mock('../../Loader/Loader', () => {
   return jest.fn().mockReturnValue(<p>Loader</p>);
 });
 
+jest.mock('lodash', () => ({
+  debounce: jest.fn().mockReturnValue(jest.fn()),
+}));
+
 describe('Test Searchbar Component', () => {
   it('Renders the searchbar with the search text sent to it', async () => {
     act(() => {
       const onSearch = jest.fn();
       render(<Searchbar searchValue="Test Search" onSearch={onSearch} />);
     });
-    const searchElement = screen.getByTestId('searchbar');
+    const searchElement = screen.getByTestId('searchbar') as HTMLInputElement;
 
     expect(searchElement.value).toBe('Test Search');
   });
@@ -54,7 +58,10 @@ describe('Test Searchbar Component', () => {
     act(() => {
       const onSearch = jest.fn();
       const { container } = render(<Searchbar onSearch={onSearch} />);
-      const searchElement = getByTestId(container, 'searchbar');
+      const searchElement = getByTestId(
+        container,
+        'searchbar'
+      ) as HTMLInputElement;
 
       expect(searchElement.value).toBe('');
     });
@@ -68,7 +75,7 @@ describe('Test Searchbar Component', () => {
         <Searchbar showLoadingStatus label="Test Label" onSearch={onSearch} />
       );
     });
-    const searchElement = screen.getByTestId('searchbar');
+    const searchElement = screen.getByTestId('searchbar') as HTMLInputElement;
 
     expect(searchElement.value).toBe('');
     expect(screen.getByText('Test Label')).toBeInTheDocument();
@@ -90,16 +97,11 @@ describe('Test Searchbar Component', () => {
     await act(async () => {
       render(<Searchbar typingInterval={1000} onSearch={onUserSearch} />);
     });
-    const searchElement = screen.getByTestId('searchbar');
+    const searchElement = screen.getByTestId('searchbar') as HTMLInputElement;
 
     expect(searchElement.value).toBe('');
 
-    await act(async () => {
-      fireEvent.change(searchElement, { target: { value: 'Test Search' } });
-      await new Promise((r) => setTimeout(r, 1000));
-
-      expect(onUserSearch).toBeCalled();
-    });
+    fireEvent.change(searchElement, { target: { value: 'Test Search' } });
 
     expect(searchElement.value).toBe('Test Search');
   });
