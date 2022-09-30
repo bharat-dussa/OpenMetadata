@@ -11,63 +11,96 @@
  *  limitations under the License.
  */
 
-import { fireEvent, getByTestId, render } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  getByTestId,
+  render,
+  screen,
+} from '@testing-library/react';
 import React from 'react';
 import Searchbar from './Searchbar';
 
 jest.useRealTimers();
 
+jest.mock('../../../utils/SvgUtils', () => {
+  return {
+    __esModule: true,
+    default: jest.fn().mockReturnValue(<p data-testid="svg-icon">SVGIcons</p>),
+    Icons: {
+      TABLE: 'table',
+      TOPIC: 'topic',
+      DASHBOARD: 'dashboard',
+    },
+  };
+});
+
+jest.mock('../../Loader/Loader', () => {
+  return jest.fn().mockReturnValue(<p>Loader</p>);
+});
+
 describe('Test Searchbar Component', () => {
-  it('Renders the searchbar with the search text sent to it', () => {
-    const onSearch = jest.fn();
-    const { container } = render(
-      <Searchbar searchValue="Test Search" onSearch={onSearch} />
-    );
-    const searchElement = getByTestId(container, 'searchbar');
+  it('Renders the searchbar with the search text sent to it', async () => {
+    act(() => {
+      const onSearch = jest.fn();
+      render(<Searchbar searchValue="Test Search" onSearch={onSearch} />);
+    });
+    const searchElement = screen.getByTestId('searchbar');
 
     expect(searchElement.value).toBe('Test Search');
   });
 
   it('Renders the searchbar with blank text if the search text is blank or not sent', () => {
-    const onSearch = jest.fn();
-    const { container } = render(<Searchbar onSearch={onSearch} />);
-    const searchElement = getByTestId(container, 'searchbar');
+    act(() => {
+      const onSearch = jest.fn();
+      const { container } = render(<Searchbar onSearch={onSearch} />);
+      const searchElement = getByTestId(container, 'searchbar');
 
-    expect(searchElement.value).toBe('');
+      expect(searchElement.value).toBe('');
+    });
   });
 
-  it('Renders the user typed text when a change event is fired', () => {
+  it('Renders the user typed text when a change event is fired', async () => {
     const onSearch = jest.fn();
-    const { container, getByText } = render(
-      <Searchbar showLoadingStatus label="Test Label" onSearch={onSearch} />
-    );
-    const searchElement = getByTestId(container, 'searchbar');
+
+    act(() => {
+      render(
+        <Searchbar showLoadingStatus label="Test Label" onSearch={onSearch} />
+      );
+    });
+    const searchElement = screen.getByTestId('searchbar');
 
     expect(searchElement.value).toBe('');
-    expect(getByText('Test Label')).toBeInTheDocument();
+    expect(screen.getByText('Test Label')).toBeInTheDocument();
 
-    fireEvent.focus(searchElement);
+    act(() => {
+      fireEvent.focus(searchElement);
 
-    fireEvent.change(searchElement, { target: { value: 'Test Search' } });
+      fireEvent.change(searchElement, { target: { value: 'Test Search' } });
 
-    fireEvent.blur(searchElement);
+      fireEvent.blur(searchElement);
+    });
 
     expect(searchElement.value).toBe('Test Search');
   });
 
   it('Calls the callback function on keyup after timer runs out', async () => {
     const onUserSearch = jest.fn();
-    const { container } = render(
-      <Searchbar typingInterval={1000} onSearch={onUserSearch} />
-    );
-    const searchElement = getByTestId(container, 'searchbar');
+
+    await act(async () => {
+      render(<Searchbar typingInterval={1000} onSearch={onUserSearch} />);
+    });
+    const searchElement = screen.getByTestId('searchbar');
 
     expect(searchElement.value).toBe('');
 
-    fireEvent.change(searchElement, { target: { value: 'Test Search' } });
-    await new Promise((r) => setTimeout(r, 1000));
+    await act(async () => {
+      fireEvent.change(searchElement, { target: { value: 'Test Search' } });
+      await new Promise((r) => setTimeout(r, 1000));
 
-    expect(onUserSearch).toBeCalled();
+      expect(onUserSearch).toBeCalled();
+    });
+
     expect(searchElement.value).toBe('Test Search');
   });
 });
