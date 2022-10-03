@@ -28,52 +28,52 @@ const mockPorps = {
 
 describe('Test Sorting DropDown Component', () => {
   it('Should render dropdown component', async () => {
-    const { findByTestId, findAllByTestId } = render(
-      <SortingDropDown {...mockPorps} />
-    );
+    await act(async () => {
+      const { findByTestId, findAllByTestId } = render(
+        <SortingDropDown {...mockPorps} />
+      );
 
-    const dropdownLabel = await findByTestId('dropdown-label');
+      const dropdownLabel = await findByTestId('dropdown-label');
 
-    expect(dropdownLabel).toBeInTheDocument();
+      expect(dropdownLabel).toBeInTheDocument();
 
-    act(() => {
       fireEvent.click(dropdownLabel);
+
+      const dropdownMenu = await findByTestId('dropdown-menu');
+
+      expect(dropdownMenu).toBeInTheDocument();
+
+      const menuItems = await findAllByTestId('dropdown-menu-item');
+
+      expect(menuItems).toHaveLength(fieldList.length);
     });
-
-    const dropdownMenu = await findByTestId('dropdown-menu');
-
-    expect(dropdownMenu).toBeInTheDocument();
-
-    const menuItems = await findAllByTestId('dropdown-menu-item');
-
-    expect(menuItems).toHaveLength(fieldList.length);
   });
 
   it('Should call onSelect method on onClick option', async () => {
-    const { findByTestId, findAllByTestId } = render(
-      <SortingDropDown {...mockPorps} />
-    );
+    await act(async () => {
+      const { findByTestId, findAllByTestId } = render(
+        <SortingDropDown {...mockPorps} />
+      );
 
-    const dropdownLabel = await findByTestId('dropdown-label');
+      const dropdownLabel = await findByTestId('dropdown-label');
 
-    expect(dropdownLabel).toBeInTheDocument();
+      expect(dropdownLabel).toBeInTheDocument();
 
-    act(() => {
       fireEvent.click(dropdownLabel);
+
+      const dropdownMenu = await findByTestId('dropdown-menu');
+
+      expect(dropdownMenu).toBeInTheDocument();
+
+      const menuItems = await findAllByTestId('dropdown-menu-item');
+
+      expect(menuItems).toHaveLength(fieldList.length);
+
+      act(() => {
+        fireEvent.click(menuItems[0]);
+      });
+
+      expect(handleFieldDropDown).toHaveBeenCalledWith('updatedAt');
     });
-
-    const dropdownMenu = await findByTestId('dropdown-menu');
-
-    expect(dropdownMenu).toBeInTheDocument();
-
-    const menuItems = await findAllByTestId('dropdown-menu-item');
-
-    expect(menuItems).toHaveLength(fieldList.length);
-
-    act(() => {
-      fireEvent.click(menuItems[0]);
-    });
-
-    expect(handleFieldDropDown).toHaveBeenCalledWith('updatedAt');
   });
 });
