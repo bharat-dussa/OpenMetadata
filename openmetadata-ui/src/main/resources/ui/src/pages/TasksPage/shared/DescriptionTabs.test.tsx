@@ -11,7 +11,7 @@
  *  limitations under the License.
  */
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import React, { forwardRef } from 'react';
 import { DescriptionTabs } from './DescriptionTabs';
 
@@ -81,17 +81,23 @@ describe('Test Description Tabs Component', () => {
 
     expect(tabs).toHaveLength(tabList.length);
 
-    fireEvent.click(tabs[0]);
+    act(() => {
+      fireEvent.click(tabs[0]);
+    });
 
     expect(
       await screen.findByTestId('richTextEditorPreviewer')
     ).toBeInTheDocument();
 
-    fireEvent.click(tabs[1]);
+    act(() => {
+      fireEvent.click(tabs[1]);
+    });
 
     expect(await screen.findByTestId('DiffView')).toBeInTheDocument();
 
-    fireEvent.click(tabs[2]);
+    act(() => {
+      fireEvent.click(tabs[2]);
+    });
 
     expect(await screen.findByTestId('richTextEditor')).toBeInTheDocument();
   });

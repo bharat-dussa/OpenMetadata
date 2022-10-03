@@ -12,14 +12,17 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import { ColumnsType } from 'antd/lib/table';
 import React from 'react';
 import { getTypeByFQN } from '../../../axiosAPIs/metadataTypeAPI';
 import { EntityType } from '../../../enums/entity.enum';
+import { Column } from '../../../generated/api/data/createTable';
 import { Dashboard } from '../../../generated/entity/data/dashboard';
 import { Mlmodel } from '../../../generated/entity/data/mlmodel';
 import { Pipeline } from '../../../generated/entity/data/pipeline';
 import { Table } from '../../../generated/entity/data/table';
 import { Topic } from '../../../generated/entity/data/topic';
+import { CustomProperty } from '../../../generated/entity/type';
 import { CustomPropertyTable } from './CustomPropertyTable';
 
 const mockCustomProperties = [
@@ -60,6 +63,31 @@ jest.mock('../../../axiosAPIs/metadataTypeAPI', () => ({
       customProperties: mockCustomProperties,
     })
   ),
+}));
+
+jest.mock('antd', () => ({
+  Table: jest.fn().mockImplementation(({ columns, dataSource }) => (
+    <table data-testid="custom-properties-table">
+      <thead>
+        <tr>
+          {(columns as ColumnsType<CustomProperty>).map((col) => (
+            <th key={col.key}>{col.title}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody key="tbody">
+        {dataSource.map((row: Column, i: number) => (
+          <tr key={i}>
+            {(columns as ColumnsType<CustomProperty>).map((col, index) => (
+              <td key={col.key}>
+                {col.render ? col.render(row, dataSource, index) : 'alt'}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )),
 }));
 
 const mockTableDetails = {} as Table & Topic & Dashboard & Pipeline & Mlmodel;

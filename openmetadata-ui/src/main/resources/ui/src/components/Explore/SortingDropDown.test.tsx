@@ -11,7 +11,7 @@
  *  limitations under the License.
  */
 
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import { tableSortingFields } from '../../constants/explore.constants';
 import SortingDropDown from './SortingDropDown';
@@ -36,7 +36,9 @@ describe('Test Sorting DropDown Component', () => {
 
     expect(dropdownLabel).toBeInTheDocument();
 
-    fireEvent.click(dropdownLabel);
+    act(() => {
+      fireEvent.click(dropdownLabel);
+    });
 
     const dropdownMenu = await findByTestId('dropdown-menu');
 
@@ -56,7 +58,9 @@ describe('Test Sorting DropDown Component', () => {
 
     expect(dropdownLabel).toBeInTheDocument();
 
-    fireEvent.click(dropdownLabel);
+    act(() => {
+      fireEvent.click(dropdownLabel);
+    });
 
     const dropdownMenu = await findByTestId('dropdown-menu');
 
@@ -66,7 +70,9 @@ describe('Test Sorting DropDown Component', () => {
 
     expect(menuItems).toHaveLength(fieldList.length);
 
-    fireEvent.click(menuItems[0]);
+    act(() => {
+      fireEvent.click(menuItems[0]);
+    });
 
     expect(handleFieldDropDown).toHaveBeenCalledWith('updatedAt');
   });
