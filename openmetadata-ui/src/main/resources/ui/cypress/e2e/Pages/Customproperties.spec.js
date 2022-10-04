@@ -75,7 +75,7 @@ describe('Custom Properties should work properly', () => {
   });
 
   Object.values(ENTITIES).forEach((entity) => {
-    it.only(`Add String custom property for ${entity.name} Entities`, () => {
+    it(`Add String custom property for ${entity.name} Entities`, () => {
     cy.getSearchQueryName(entity.name).then((entityName) => {
       interceptURL(
         'GET',
