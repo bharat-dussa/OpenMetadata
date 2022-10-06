@@ -446,7 +446,7 @@ export const visitEntityDetailsPage = (term, serviceName, entity) => {
     }
   });
   cy.get('body').click(1, 1);
-  cy.get('[data-testid="searchBox"]').clear();
+  cy.get('[data-testid="searchBox"]').should('exist').clear();
 };
 
 // add new tag to entity and its table
@@ -670,7 +670,7 @@ export const addCustomPropertiesForEntity = (
   customType,
   value,
   entityObj,
-  entityName
+  entityName = ''
 ) => {
   const propertyName = `entity${entityType.name}test${uuid()}`;
 

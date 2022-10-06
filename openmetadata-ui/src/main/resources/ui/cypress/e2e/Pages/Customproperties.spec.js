@@ -34,7 +34,6 @@ describe('Custom Properties should work properly', () => {
   Object.values(ENTITIES).forEach((entity) => {
     it(`Add Integer custom property for ${entity.name}  Entities`, () => {
      cy.getSearchQueryName(entity.name).then((entityName) => {
-        
       interceptURL(
         'GET',
         `/api/v1/metadata/types/name/${entity.name}*`,
@@ -72,15 +71,15 @@ describe('Custom Properties should work properly', () => {
 
       deleteCreatedProperty(propertyName);
     });
-
-})
   });
-  
+  });
+
   Object.values(ENTITIES).forEach((entity) => {
     it(`Add String custom property for ${entity.name} Entities`, () => {
+    cy.getSearchQueryName(entity.name).then((entityName) => {
       interceptURL(
         'GET',
-        `/api/v1/metadata/types/name/${entity.name}*`,
+       `/api/v1/metadata/types/name/${entity.name}*`,
         'getEntity'
       );
 
@@ -96,7 +95,8 @@ describe('Custom Properties should work properly', () => {
         entity,
         'string',
         entity.stringValue,
-        entity.entityObj
+        entity.entityObj,
+        entityName
       );
 
       //Navigating back to custom properties page
@@ -116,9 +116,11 @@ describe('Custom Properties should work properly', () => {
       deleteCreatedProperty(propertyName);
     });
   });
+});
 
   Object.values(ENTITIES).forEach((entity) => {
     it(`Add Markdown custom property for ${entity.name} Entities`, () => {
+    cy.getSearchQueryName(entity.name).then((entityName) => {
       interceptURL(
         'GET',
         `/api/v1/metadata/types/name/${entity.name}*`,
@@ -137,7 +139,8 @@ describe('Custom Properties should work properly', () => {
         entity,
         'markdown',
         entity.markdownValue,
-        entity.entityObj
+        entity.entityObj,
+        entityName
       );
       //Navigating back to custom properties page
       cy.get('[data-testid="appbar-item-settings"]')
@@ -153,6 +156,7 @@ describe('Custom Properties should work properly', () => {
       editCreatedProperty(propertyName);
 
       deleteCreatedProperty(propertyName);
+    });
     });
   });
 });
