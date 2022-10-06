@@ -48,6 +48,10 @@ jest.mock('../../../utils/RouterUtils', () => ({
   getRoleWithFqnPath: jest.fn(),
 }));
 
+jest.mock('antd', () => ({
+  ...jest.requireActual('antd'),
+}));
+
 const mockFetchRoles = jest.fn();
 
 const mockProps = {
