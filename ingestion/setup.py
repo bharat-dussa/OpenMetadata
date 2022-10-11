@@ -69,13 +69,12 @@ plugins: Dict[str, Set[str]] = {
     "bigquery-usage": {"google-cloud-logging", "cachetools"},
     "docker": {"python_on_whales==0.34.0"},
     "backup": {"boto3~=1.19.12"},
-    "dagster": {"pymysql>=1.0.2", "psycopg2-binary", "GeoAlchemy2"},
+    "dagster": {"pymysql>=1.0.2", "psycopg2-binary", "GeoAlchemy2", "dagster_graphql"},
     "datalake": {
         "google-cloud-storage==1.43.0",
         "pandas==1.3.5",
         "gcsfs==2022.5.0",
         "s3fs==0.4.2",
-        "dask==2022.2.0",
         "pyarrow==6.0.1",
         "boto3~=1.19.12",
     },
@@ -147,6 +146,7 @@ test = {
     "pylint",
     "pytest==7.0.0",
     "pytest-cov",
+    "pytest-order",
     "faker",
     "coverage",
     # sklearn integration

@@ -24,6 +24,7 @@ import { WebStorageStateStore } from 'oidc-client';
 import { oidcTokenKey, ROUTES } from '../constants/constants';
 import { validEmailRegEx } from '../constants/regex.constants';
 import { AuthTypes } from '../enums/signin.enum';
+import { AuthenticationConfiguration } from '../generated/configuration/authenticationConfiguration';
 import { isDev } from './EnvironmentUtils';
 
 export let msalInstance: IPublicClientApplication;
@@ -71,10 +72,16 @@ export const getUserManagerConfig = (
 };
 
 export const getAuthConfig = (
-  authClient: Record<string, string> = {}
+  authClient: AuthenticationConfiguration
 ): Record<string, string | boolean> => {
-  const { authority, clientId, callbackUrl, provider, providerName } =
-    authClient;
+  const {
+    authority,
+    clientId,
+    callbackUrl,
+    provider,
+    providerName,
+    enableSelfSignup,
+  } = authClient;
   let config = {};
   const redirectUri = getRedirectUri(callbackUrl);
   switch (provider) {
@@ -141,6 +148,23 @@ export const getAuthConfig = (
 
       break;
     }
+    case AuthTypes.BASIC: {
+      config = {
+        auth: {
+          authority,
+          clientId,
+          callbackUrl,
+          postLogoutRedirectUri: '/',
+        },
+        cache: {
+          cacheLocation: BrowserCacheLocation.LocalStorage,
+        },
+        provider,
+        enableSelfSignUp: enableSelfSignup,
+      } as Configuration;
+
+      break;
+    }
     case AuthTypes.AZURE:
       {
         config = {
@@ -187,10 +211,16 @@ export const getNameFromEmail = (email: string) => {
 
 export const isProtectedRoute = (pathname: string) => {
   return (
-    pathname !== ROUTES.SIGNUP &&
-    pathname !== ROUTES.SIGNIN &&
-    pathname !== ROUTES.CALLBACK &&
-    pathname !== ROUTES.SILENT_CALLBACK
+    [
+      ROUTES.SIGNUP,
+      ROUTES.SIGNIN,
+      ROUTES.FORGOT_PASSWORD,
+      ROUTES.CALLBACK,
+      ROUTES.SILENT_CALLBACK,
+      ROUTES.REGISTER,
+      ROUTES.RESET_PASSWORD,
+      ROUTES.ACCOUNT_ACTIVATION,
+    ].indexOf(pathname) === -1
   );
 };
 
@@ -200,6 +230,10 @@ export const isTourRoute = (pathname: string) => {
 
 export const getUrlPathnameExpiry = () => {
   return new Date(Date.now() + 60 * 60 * 1000);
+};
+
+export const getUrlPathnameExpiryAfterRoute = () => {
+  return new Date(Date.now() + 1000);
 };
 
 /**

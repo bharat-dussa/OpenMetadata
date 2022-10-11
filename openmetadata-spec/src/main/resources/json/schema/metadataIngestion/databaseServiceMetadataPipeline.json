@@ -43,6 +43,11 @@
           "title": "DBT Cloud Account Id",
           "description": "DBT cloud account Id",
           "type": "string"
+        },
+        "dbtUpdateDescriptions": {
+          "description": "Optional configuration to update the description from DBT or not",
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false,
@@ -67,6 +72,11 @@
           "title": "DBT Run Results File Path",
           "description": "DBT run results file path to extract the test results information.",
           "type": "string"
+        },
+        "dbtUpdateDescriptions": {
+          "description": "Optional configuration to update the description from DBT or not",
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false,
@@ -91,6 +101,11 @@
           "title": "DBT Run Results HTTP File Path",
           "description": "DBT run results http file path to extract the test results information.",
           "type": "string"
+        },
+        "dbtUpdateDescriptions": {
+          "description": "Optional configuration to update the description from DBT or not",
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false,
@@ -107,6 +122,11 @@
         "dbtPrefixConfig": {
           "title": "DBT Prefix Config",
           "$ref": "#/definitions/dbtBucketDetails"
+        },
+        "dbtUpdateDescriptions": {
+          "description": "Optional configuration to update the description from DBT or not",
+          "type": "boolean",
+          "default": false
         }
       }
     },
@@ -121,6 +141,11 @@
         "dbtPrefixConfig": {
           "title": "DBT Prefix Config",
           "$ref": "#/definitions/dbtBucketDetails"
+        },
+        "dbtUpdateDescriptions": {
+          "description": "Optional configuration to update the description from DBT or not",
+          "type": "boolean",
+          "default": false
         }
       }
     }
@@ -155,6 +180,11 @@
       "description": "Optional configuration to turn off fetching metadata for tags.",
       "type": "boolean",
       "default": true
+    },
+    "useFqnForFiltering": {
+      "description": "Regex will be applied on fully qualified name (e.g service_name.db_name.schema_name.table_name) instead of raw name (e.g. table_name)",
+      "type": "boolean",
+      "default": false
     },
     "schemaFilterPattern": {
       "description": "Regex to only fetch tables or databases that matches the pattern.",

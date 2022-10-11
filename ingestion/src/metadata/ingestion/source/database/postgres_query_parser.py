@@ -32,7 +32,6 @@ from metadata.generated.schema.type.tableQuery import TableQueries, TableQuery
 from metadata.ingestion.api.source import InvalidSourceException
 from metadata.ingestion.source.database.query_parser_source import QueryParserSource
 from metadata.utils.connections import get_connection
-from metadata.utils.filters import filter_by_database, filter_by_schema
 from metadata.utils.helpers import get_start_and_end
 from metadata.utils.logger import ingestion_logger
 
@@ -79,11 +78,13 @@ class PostgresQueryParserSource(QueryParserSource, ABC):
             if self.config.sourceConfig.config.queryLogFilePath:
                 table_query_list = []
                 with open(
-                    self.config.sourceConfig.config.queryLogFilePath, "r"
+                    self.config.sourceConfig.config.queryLogFilePath,
+                    "r",
+                    encoding="utf-8",
                 ) as query_log_file:
 
-                    for i in csv.DictReader(query_log_file):
-                        query_dict = dict(i)
+                    for record in csv.DictReader(query_log_file):
+                        query_dict = dict(record)
 
                         analysis_date = (
                             datetime.utcnow()
@@ -133,6 +134,9 @@ class PostgresQueryParserSource(QueryParserSource, ABC):
             logger.debug(traceback.format_exc())
 
     def process_table_query(self) -> Optional[Iterable[TableQuery]]:
+        """
+        Process Query
+        """
         try:
             with get_connection(self.connection).connect() as conn:
                 rows = conn.execute(self.get_sql_statement())
@@ -140,14 +144,6 @@ class PostgresQueryParserSource(QueryParserSource, ABC):
                 for row in rows:
                     row = dict(row)
                     try:
-                        if filter_by_database(
-                            self.source_config.databaseFilterPattern,
-                            self.get_database_name(row),
-                        ) or filter_by_schema(
-                            self.source_config.schemaFilterPattern,
-                            schema_name=row.get("schema_name"),
-                        ):
-                            continue
                         queries.append(
                             TableQuery(
                                 query=row["query_text"],

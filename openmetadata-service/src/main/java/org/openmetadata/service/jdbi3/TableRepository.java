@@ -467,15 +467,13 @@ public class TableRepository extends EntityRepository<Table> {
     Table table = dao.findEntityById(tableId);
     table.withDataModel(dataModel);
 
-    // Carry forward the table description from the model to table entity, if empty
-    if (nullOrEmpty(table.getDescription())) {
-      table.setDescription(dataModel.getDescription());
-    }
-
     // Carry forward the table owner from the model to table entity, if empty
     if (table.getOwner() == null) {
       storeOwner(table, dataModel.getOwner());
     }
+
+    table.setTags(dataModel.getTags());
+    applyTags(table);
 
     // Carry forward the column description from the model to table columns, if empty
     for (Column modelColumn : listOrEmpty(dataModel.getColumns())) {
@@ -487,13 +485,13 @@ public class TableRepository extends EntityRepository<Table> {
       if (stored == null) {
         continue;
       }
-      if (nullOrEmpty(stored.getDescription())) {
-        stored.setDescription(modelColumn.getDescription());
-      }
+      stored.setTags(modelColumn.getTags());
     }
+    applyTags(table.getColumns());
     dao.update(table.getId(), JsonUtils.pojoToJson(table));
 
     setFieldsInternal(table, new Fields(List.of(FIELD_OWNER), FIELD_OWNER));
+    setFieldsInternal(table, new Fields(List.of(FIELD_TAGS), FIELD_TAGS));
 
     return table;
   }
@@ -1055,22 +1053,22 @@ public class TableRepository extends EntityRepository<Table> {
     private void updateColumnPrecision(Column origColumn, Column updatedColumn) throws JsonProcessingException {
       String columnField = getColumnField(original, origColumn, "precision");
       boolean updated = recordChange(columnField, origColumn.getPrecision(), updatedColumn.getPrecision());
-      if (origColumn.getPrecision() != null) { // Previously precision was set
-        if (updated && updatedColumn.getPrecision() < origColumn.getPrecision()) {
-          // The precision was reduced. Treat it as backward-incompatible change
-          majorVersionChange = true;
-        }
+      if (origColumn.getPrecision() != null
+          && updated
+          && updatedColumn.getPrecision() < origColumn.getPrecision()) { // Previously precision was set
+        // The precision was reduced. Treat it as backward-incompatible change
+        majorVersionChange = true;
       }
     }
 
     private void updateColumnScale(Column origColumn, Column updatedColumn) throws JsonProcessingException {
       String columnField = getColumnField(original, origColumn, "scale");
       boolean updated = recordChange(columnField, origColumn.getScale(), updatedColumn.getScale());
-      if (origColumn.getScale() != null) { // Previously scale was set
-        if (updated && updatedColumn.getScale() < origColumn.getScale()) {
-          // The scale was reduced. Treat it as backward-incompatible change
-          majorVersionChange = true;
-        }
+      if (origColumn.getScale() != null
+          && updated
+          && updatedColumn.getScale() < origColumn.getScale()) { // Previously scale was set
+        // The scale was reduced. Treat it as backward-incompatible change
+        majorVersionChange = true;
       }
     }
   }

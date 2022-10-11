@@ -11,8 +11,7 @@
  *  limitations under the License.
  */
 
-import { uuid } from '../common/common';
-
+export const uuid = () => Cypress._.random(0, 1e6);
 const id = uuid();
 
 export const MYDATA_SUMMARY_OPTIONS = {
@@ -23,14 +22,32 @@ export const MYDATA_SUMMARY_OPTIONS = {
   service: 'service',
   user: 'user',
   terms: 'terms',
+  mlmodels: 'mlmodels',
+};
+
+export const SEARCH_INDEX = {
+  tables: 'table_search_index',
+  topics: 'topic_search_index',
+  dashboards: 'dashboard_search_index',
+  pipelines: 'pipeline_search_index',
+  mlmodels: 'mlmodel_search_index',
 };
 
 export const SEARCH_ENTITY_TABLE = {
-  table_1: { term: 'raw_customer', entity: MYDATA_SUMMARY_OPTIONS.tables },
-  table_2: { term: 'fact_session', entity: MYDATA_SUMMARY_OPTIONS.tables },
+  table_1: {
+    term: 'raw_customer',
+    entity: MYDATA_SUMMARY_OPTIONS.tables,
+    serviceName: 'sample_data',
+  },
+  table_2: {
+    term: 'fact_session',
+    entity: MYDATA_SUMMARY_OPTIONS.tables,
+    serviceName: 'sample_data',
+  },
   table_3: {
     term: 'raw_product_catalog',
     entity: MYDATA_SUMMARY_OPTIONS.tables,
+    serviceName: 'sample_data',
   },
 };
 
@@ -38,33 +55,50 @@ export const SEARCH_ENTITY_TOPIC = {
   topic_1: {
     term: 'shop_products',
     entity: MYDATA_SUMMARY_OPTIONS.topics,
+    serviceName: 'sample_kafka',
   },
-  topic_2: { term: 'orders', entity: MYDATA_SUMMARY_OPTIONS.topics },
+  topic_2: {
+    term: 'orders',
+    entity: MYDATA_SUMMARY_OPTIONS.topics,
+    serviceName: 'sample_kafka',
+  },
 };
 
 export const SEARCH_ENTITY_DASHBOARD = {
   dashboard_1: {
     term: 'Slack Dashboard',
     entity: MYDATA_SUMMARY_OPTIONS.dashboards,
+    serviceName: 'sample_superset',
   },
   dashboard_2: {
     term: 'Unicode Test',
     entity: MYDATA_SUMMARY_OPTIONS.dashboards,
+    serviceName: 'sample_superset',
   },
 };
-
+// Note:- Please do not change term name of pipeline
 export const SEARCH_ENTITY_PIPELINE = {
   pipeline_1: {
-    term: 'Snowflake',
+    term: 'dim_product_etl',
     entity: MYDATA_SUMMARY_OPTIONS.pipelines,
+    serviceName: 'sample_airflow',
   },
   pipeline_2: {
-    term: 'Hive',
+    term: 'dim_location_etl',
     entity: MYDATA_SUMMARY_OPTIONS.pipelines,
+    serviceName: 'sample_airflow',
   },
-  pipeline_3: {
-    term: 'Trino',
-    entity: MYDATA_SUMMARY_OPTIONS.pipelines,
+};
+export const SEARCH_ENTITY_MLMODEL = {
+  mlmodel_1: {
+    term: 'forecast_sales',
+    entity: MYDATA_SUMMARY_OPTIONS.mlmodels,
+    serviceName: 'mlflow_svc',
+  },
+  mlmodel_2: {
+    term: 'eta_predictions',
+    entity: MYDATA_SUMMARY_OPTIONS.mlmodels,
+    serviceName: 'mlflow_svc',
   },
 };
 
@@ -72,10 +106,12 @@ export const DELETE_ENTITY = {
   table: {
     term: 'fact_sale',
     entity: MYDATA_SUMMARY_OPTIONS.tables,
+    serviceName: 'sample_data',
   },
   topic: {
     term: 'shop_updates',
     entity: MYDATA_SUMMARY_OPTIONS.topics,
+    serviceName: 'sample_kafka',
   },
 };
 
@@ -187,6 +223,7 @@ export const ENTITIES = {
     integerValue: '45',
     stringValue: 'This is string propery',
     markdownValue: 'This is markdown value',
+    entityObj: SEARCH_ENTITY_TABLE.table_1,
   },
   entity_topic: {
     name: 'topic',
@@ -194,6 +231,7 @@ export const ENTITIES = {
     integerValue: '23',
     stringValue: 'This is string propery',
     markdownValue: 'This is markdown value',
+    entityObj: SEARCH_ENTITY_TOPIC.topic_1,
   },
   entity_dashboard: {
     name: 'dashboard',
@@ -201,6 +239,7 @@ export const ENTITIES = {
     integerValue: '14',
     stringValue: 'This is string propery',
     markdownValue: 'This is markdown value',
+    entityObj: SEARCH_ENTITY_DASHBOARD.dashboard_1,
   },
   entity_pipeline: {
     name: 'pipeline',
@@ -208,5 +247,11 @@ export const ENTITIES = {
     integerValue: '78',
     stringValue: 'This is string propery',
     markdownValue: 'This is markdown value',
+    entityObj: SEARCH_ENTITY_PIPELINE.pipeline_1,
   },
+};
+
+export const LOGIN = {
+  username: 'admin@openmetadata.org',
+  password: 'admin',
 };

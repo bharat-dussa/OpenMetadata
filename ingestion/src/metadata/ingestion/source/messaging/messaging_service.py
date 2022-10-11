@@ -83,8 +83,8 @@ class MessagingSourceStatus(SourceStatus):
     Reports the source status after ingestion
     """
 
-    topics_scanned: List[str] = list()
-    filtered: List[str] = list()
+    topics_scanned: List[str] = []
+    filtered: List[str] = []
 
     def topic_scanned(self, topic: str) -> None:
         self.topics_scanned.append(topic)
@@ -100,7 +100,7 @@ class MessagingServiceSource(TopologyRunnerMixin, Source, ABC):
     """
 
     @abstractmethod
-    def yield_topic(self, messaging_details: Any) -> Iterable[CreateTopicRequest]:
+    def yield_topic(self, topic_details: Any) -> Iterable[CreateTopicRequest]:
         """
         Method to Get Messaging Entity
         """
@@ -147,13 +147,14 @@ class MessagingServiceSource(TopologyRunnerMixin, Source, ABC):
 
     def get_topic(self) -> Any:
         for topic_details in self.get_topic_list():
+            topic_name = self.get_topic_name(topic_details)
             if filter_by_topic(
                 self.source_config.topicFilterPattern,
-                self.get_topic_name(topic_details),
+                topic_name,
             ):
                 self.status.filter(
-                    self.get_topic_name(topic_details),
-                    "Topic Pattern not Allowed",
+                    topic_name,
+                    "Topic Filtered Out",
                 )
                 continue
             yield topic_details

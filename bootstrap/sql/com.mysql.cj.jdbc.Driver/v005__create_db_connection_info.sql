@@ -290,3 +290,16 @@ SET json = JSON_INSERT(
 )
 WHERE name = 'columnValuesToNotMatchRegex'
 AND supported_data_types IS NULL;
+
+UPDATE pipeline_service_entity 
+SET json = JSON_REMOVE(json, '$.connection.config.dbConnection')
+WHERE serviceType = 'Dagster';  
+
+
+UPDATE pipeline_service_entity 
+SET JSON = JSON_INSERT(
+	JSON_REMOVE(json, '$.connection.config.type','$.serviceType'),
+		'$.connection.config.type','GluePipeline',
+		'$.serviceType','GluePipeline'
+	)
+where serviceType='Glue';

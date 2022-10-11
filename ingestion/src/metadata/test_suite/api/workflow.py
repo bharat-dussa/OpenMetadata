@@ -15,6 +15,7 @@ Workflow definition for the test suite
 
 from __future__ import annotations
 
+import sys
 import traceback
 from copy import deepcopy
 from logging import Logger
@@ -140,31 +141,40 @@ class TestSuiteWorkflow:
         Args:
             entity_link: entity link for the test case
         """
-        if self.config.source.type not in {"sample-data", "sample-usage"}:
-            service = self.metadata.get_by_name(
-                entity=DatabaseService,
-                fqn=table_fqn.split(".")[0],
-            )
+        service = self.metadata.get_by_name(
+            entity=DatabaseService,
+            fqn=table_fqn.split(".")[0],
+        )
 
-            if service:
-                service_connection = (
-                    self.metadata.secrets_manager_client.retrieve_service_connection(
-                        service,
-                        "databaseservice",
-                    )
+        if service:
+            service_connection = (
+                self.metadata.secrets_manager_client.retrieve_service_connection(
+                    service,
+                    "databaseservice",
                 )
-                service_connection_config = deepcopy(service_connection.__root__.config)
+            )
+            service_connection_config = deepcopy(service_connection.__root__.config)
+            if hasattr(service_connection_config, "supportsDatabase"):
                 if (
-                    hasattr(service_connection_config, "supportsDatabase")
+                    hasattr(
+                        service_connection_config,
+                        "database",
+                    )
                     and not service_connection_config.database
                 ):
                     service_connection_config.database = table_fqn.split(".")[1]
-                return service_connection_config
+                if (
+                    hasattr(
+                        service_connection_config,
+                        "catalog",
+                    )
+                    and not service_connection_config.catalog
+                ):
+                    service_connection_config.catalog = table_fqn.split(".")[1]
+            return service_connection_config
 
-            logger.error(
-                f"Could not retrive connection details for entity {entity_link}"
-            )
-            raise ValueError()
+        logger.error(f"Could not retrive connection details for entity {entity_link}")
+        raise ValueError()
 
     def _get_table_entity_from_test_case(self, table_fqn: str):
         """given an entityLink return the table entity
@@ -205,29 +215,24 @@ class TestSuiteWorkflow:
         Args:
             entity: table entity
         """
-        # Should remove this with https://github.com/open-metadata/OpenMetadata/issues/5458
-        if entity.serviceType != DatabaseServiceType.BigQuery:
+        if (
+            not hasattr(entity, "serviceType")
+            or entity.serviceType != DatabaseServiceType.BigQuery
+        ):
             return None
-        if entity.tablePartition:
-            if entity.tablePartition.intervalType in {
-                IntervalType.TIME_UNIT,
-                IntervalType.INGESTION_TIME,
-            }:
-                try:
-                    partition_field = entity.tablePartition.columns[0]
-                except Exception:
-                    raise TypeError(
-                        "Unsupported ingestion based partition type. Skipping table"
-                    )
 
+        if hasattr(entity, "tablePartition") and entity.tablePartition:
+            if entity.tablePartition.intervalType == IntervalType.TIME_UNIT:
                 return TablePartitionConfig(
-                    partitionField=partition_field,
+                    partitionField=entity.tablePartition.columns[0]
                 )
-
+            if entity.tablePartition.intervalType == IntervalType.INGESTION_TIME:
+                if entity.tablePartition.interval == "DAY":
+                    return TablePartitionConfig(partitionField="_PARTITIONDATE")
+                return TablePartitionConfig(partitionField="_PARTITIONTIME")
             raise TypeError(
                 f"Unsupported partition type {entity.tablePartition.intervalType}. Skipping table"
             )
-
         return None
 
     def _create_sqa_tests_runner_interface(self, table_fqn: str):
@@ -277,8 +282,9 @@ class TestSuiteWorkflow:
         processor.config.testSuites
         """
         test_suite_entities = []
+        test_suites = self.processor_config.testSuites or []
 
-        for test_suite in self.processor_config.testSuites:
+        for test_suite in test_suites:
             test_suite_entity = self.metadata.get_by_name(
                 entity=TestSuite,
                 fqn=test_suite.name,
@@ -336,9 +342,9 @@ class TestSuiteWorkflow:
             cli_config_test_case_name: test cases defined in CLI workflow associated with its test suite
             test_cases: list of test cases entities fetch from the server using test suite names in the config file
         """
-        test_case_names_to_create = set(
-            [test_case_def[0].name for test_case_def in cli_config_test_cases_def]
-        ) - set([test_case.name.__root__ for test_case in test_cases])
+        test_case_names_to_create = {
+            test_case_def[0].name for test_case_def in cli_config_test_cases_def
+        } - {test_case.name.__root__ for test_case in test_cases}
 
         if not test_case_names_to_create:
             return None
@@ -367,10 +373,7 @@ class TestSuiteWorkflow:
                             testSuite=self.metadata.get_entity_reference(
                                 entity=TestSuite, fqn=test_suite.name
                             ),
-                            parameterValues=[
-                                parameter_values
-                                for parameter_values in test_case_to_create.parameterValues
-                            ],
+                            parameterValues=list(test_case_to_create.parameterValues),
                         )
                     )
                 )
@@ -388,6 +391,10 @@ class TestSuiteWorkflow:
             self.get_test_suite_entity_for_ui_workflow()
             or self.get_or_create_test_suite_entity_for_cli_workflow()
         )
+        if not test_suites:
+            logger.warning("No testSuite found in configuration file. Exiting.")
+            sys.exit(1)
+
         test_cases = self.get_test_cases_from_test_suite(test_suites)
         if self.processor_config.testSuites:
             cli_config_test_cases_def = self.get_test_case_from_cli_config()
@@ -423,8 +430,8 @@ class TestSuiteWorkflow:
                         )
             except TypeError as exc:
                 logger.debug(traceback.format_exc())
-                logger.warning(f"Could not run test case {test_case.name}: {exc}")
-                self.status.failure(test_case.fullyQualifiedName.__root__)
+                logger.warning(f"Could not run test case for table {table_fqn}: {exc}")
+                self.status.failure(table_fqn)
 
     def print_status(self) -> None:
         """

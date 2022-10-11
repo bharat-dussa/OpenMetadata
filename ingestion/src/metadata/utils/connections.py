@@ -31,6 +31,7 @@ from sqlalchemy.pool import QueuePool
 
 from metadata.clients.connection_clients import (
     AirByteClient,
+    DagsterClient,
     DatalakeClient,
     DeltaLakeClient,
     DynamoClient,
@@ -124,8 +125,8 @@ from metadata.generated.schema.entity.services.connections.pipeline.dagsterConne
 from metadata.generated.schema.entity.services.connections.pipeline.fivetranConnection import (
     FivetranConnection,
 )
-from metadata.generated.schema.entity.services.connections.pipeline.glueConnection import (
-    GlueConnection as GluePipelineConnection,
+from metadata.generated.schema.entity.services.connections.pipeline.gluePipelineConnection import (
+    GluePipelineConnection,
 )
 from metadata.generated.schema.entity.services.connections.pipeline.nifiConnection import (
     NifiConnection,
@@ -145,11 +146,19 @@ class SourceConnectionException(Exception):
 
 
 def render_query_header(ometa_version: str) -> str:
+    """
+    Render the query header for OpenMetadata Queries
+    """
+
     header_obj = {"app": "OpenMetadata", "version": ometa_version}
     return f"/* {json.dumps(header_obj)} */"
 
 
 def inject_query_header(conn, cursor, statement, parameters, context, executemany):
+    """
+    Inject the query header for OpenMetadata Queries
+    """
+
     version = pkg_resources.require("openmetadata-ingestion")[0].version
     statement_with_header = render_query_header(version) + "\n" + statement
     return statement_with_header, parameters
@@ -233,7 +242,7 @@ def _(connection: SnowflakeConnection, verbose: bool = False) -> Engine:
         )
 
         if connection.privateKey:
-            connection.connectionArguments = dict()
+            connection.connectionArguments = {}
             connection.connectionArguments["private_key"] = pkb
 
     return create_generic_connection(connection, verbose)
@@ -427,10 +436,10 @@ def test_connection(connection) -> None:
             conn.execute(ConnTestFn())
     except OperationalError as err:
         msg = f"Connection error for {connection}: {err}. Check the connection details."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from err
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -446,10 +455,10 @@ def _(connection: DynamoClient) -> None:
         connection.client.tables.all()
     except ClientError as err:
         msg = f"Connection error for {connection}: {err}. Check the connection details."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from err
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -462,13 +471,15 @@ def _(connection: GlueDBClient) -> None:
     from botocore.client import ClientError
 
     try:
-        connection.client.list_workflows()
+        pagitator = connection.client.get_paginator("get_databases")
+        pagitator.paginate()
+
     except ClientError as err:
         msg = f"Connection error for {connection}: {err}. Check the connection details."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from err
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -481,13 +492,13 @@ def _(connection: GluePipelineClient) -> None:
     from botocore.client import ClientError
 
     try:
-        connection.client.get_paginator("get_databases")
+        connection.client.list_workflows()
     except ClientError as err:
         msg = f"Connection error for {connection}: {err}. Check the connection details."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from err
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -498,10 +509,10 @@ def _(connection: SalesforceClient) -> None:
         connection.client.describe()
     except SalesforceAuthenticationFailed as err:
         msg = f"Connection error for {connection}: {err}. Check the connection details."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from err
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -517,7 +528,7 @@ def _(connection: KafkaClient) -> None:
             _ = connection.schema_registry_client.get_subjects()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -526,13 +537,13 @@ def _(connection: DeltaLakeClient) -> None:
         connection.client.catalog.listDatabases()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
 def _(connection: MetabaseConnection, verbose: bool = False):
     try:
-        params = dict()
+        params = {}
         params["username"] = connection.username
         params["password"] = connection.password.get_secret_value()
 
@@ -551,7 +562,7 @@ def _(connection: MetabaseConnection, verbose: bool = False):
 
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -563,7 +574,7 @@ def _(connection: MetabaseClient) -> None:
         )
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -572,7 +583,7 @@ def _(connection: AirflowConnection) -> None:
         test_connection(connection.connection)
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -581,7 +592,7 @@ def _(connection: AirflowConnection) -> None:
         return get_connection(connection.connection)
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -597,7 +608,7 @@ def _(connection: AirByteClient) -> None:
         connection.client.list_workspaces()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -613,7 +624,7 @@ def _(connection: FivetranClient) -> None:
         connection.client.list_groups()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -628,7 +639,7 @@ def _(connection: RedashConnection, verbose: bool = False):
 
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -637,7 +648,7 @@ def _(connection: RedashClient) -> None:
         connection.client.dashboards()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -655,7 +666,7 @@ def _(connection: SupersetClient) -> None:
         connection.client.fetch_menu()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -705,7 +716,7 @@ def _(connection: TableauClient) -> None:
 
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -721,7 +732,7 @@ def _(connection: PowerBiClient) -> None:
         connection.client.fetch_dashboards()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -746,7 +757,7 @@ def _(connection: LookerClient) -> None:
         connection.client.me()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @test_connection.register
@@ -774,7 +785,7 @@ def _(connection: DatalakeClient) -> None:
 
     except ClientError as err:
         msg = f"Connection error for {connection}: {err}. Check the connection details."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from err
 
 
 @singledispatch
@@ -820,7 +831,7 @@ def _(connection: ModeClient) -> None:
         connection.client.get_user_account()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -841,7 +852,7 @@ def _(connection: MlflowClientWrapper) -> None:
         connection.client.list_registered_models()
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
 
 
 @get_connection.register
@@ -864,7 +875,7 @@ def _(connection: NifiClientWrapper) -> None:
     except Exception as err:
         raise SourceConnectionException(
             f"Unknown error connecting with {connection} - {err}."
-        )
+        ) from err
 
 
 @get_connection.register
@@ -878,19 +889,30 @@ def _(_: BackendConnection, verbose: bool = False):
         return session.get_bind()
 
 
-@test_connection.register
-def _(connection: DagsterConnection) -> None:
-    try:
-        test_connection(connection.dbConnection)
-    except Exception as exc:
-        msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
-
-
 @get_connection.register
 def _(connection: DagsterConnection) -> None:
+    from urllib.parse import urlparse
+
+    from dagster_graphql import DagsterGraphQLClient
+
     try:
-        return get_connection(connection.dbConnection)
+        host_port = connection.hostPort
+        host_port = urlparse(host_port)
+        connection = DagsterGraphQLClient(
+            hostname=host_port.hostname, port_number=host_port.port
+        )
+        return DagsterClient(connection)
     except Exception as exc:
         msg = f"Unknown error connecting with {connection}: {exc}."
-        raise SourceConnectionException(msg)
+        raise SourceConnectionException(msg) from exc
+
+
+@test_connection.register
+def _(connection: DagsterClient) -> None:
+    from metadata.utils.graphql_queries import TEST_QUERY_GRAPHQL
+
+    try:
+        connection.client._execute(TEST_QUERY_GRAPHQL)
+    except Exception as exc:
+        msg = f"Unknown error connecting with {connection}: {exc}."
+        raise SourceConnectionException(msg) from exc

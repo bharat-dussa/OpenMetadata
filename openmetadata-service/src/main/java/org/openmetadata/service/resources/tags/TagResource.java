@@ -14,6 +14,7 @@
 package org.openmetadata.service.resources.tags;
 
 import static org.openmetadata.common.utils.CommonUtil.listOrEmpty;
+import static org.openmetadata.service.Entity.ADMIN_USER_NAME;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -92,7 +93,7 @@ public class TagResource {
     this.authorizer = authorizer;
   }
 
-  @SuppressWarnings("unused") // Method used for reflection
+  @SuppressWarnings("unused") // Method used by reflection
   public void initialize(OpenMetadataApplicationConfig config) throws IOException {
     // Find tag definitions and load tag categories from the json file, if necessary
     List<String> tagFiles = EntityUtil.getJsonDataResources(".*json/data/tags/.*\\.json$");
@@ -104,13 +105,13 @@ public class TagResource {
             tagJson = tagJson.replace("<separator>", Entity.SEPARATOR);
             TagCategory tagCategory = JsonUtils.readValue(tagJson, TagCategory.class);
             long now = System.currentTimeMillis();
-            tagCategory.withId(UUID.randomUUID()).withUpdatedBy("admin").withUpdatedAt(now);
+            tagCategory.withId(UUID.randomUUID()).withUpdatedBy(ADMIN_USER_NAME).withUpdatedAt(now);
             tagCategory
                 .getChildren()
                 .forEach(
                     t -> {
-                      t.withId(UUID.randomUUID()).withUpdatedBy("admin").withUpdatedAt(now);
-                      t.getChildren().forEach(c -> c.withUpdatedBy("admin").withUpdatedAt(now));
+                      t.withId(UUID.randomUUID()).withUpdatedBy(ADMIN_USER_NAME).withUpdatedAt(now);
+                      t.getChildren().forEach(c -> c.withUpdatedBy(ADMIN_USER_NAME).withUpdatedAt(now));
                     });
             daoCategory.initCategory(tagCategory);
           } catch (Exception e) {

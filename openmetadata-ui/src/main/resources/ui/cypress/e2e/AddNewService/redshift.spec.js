@@ -11,13 +11,19 @@
  *  limitations under the License.
  */
 
-import { deleteCreatedService, editOwnerforCreatedService, goToAddNewServicePage, testServiceCreationAndIngestion, uuid } from '../../common/common';
-import { SERVICE_TYPE } from '../../constants/constants';
+import { deleteCreatedService, editOwnerforCreatedService, goToAddNewServicePage, login, testServiceCreationAndIngestion, updateDescriptionForIngestedTables, uuid } from '../../common/common';
+import { LOGIN, SERVICE_TYPE } from '../../constants/constants';
 
 const serviceType = 'Redshift';
 const serviceName = `${serviceType}-ct-test-${uuid()}`;
+const tableName = 'boolean_test';
+const description = `This is ${serviceName} description`;
 
 describe('RedShift Ingestion', () => {
+  beforeEach(() => {
+    login(LOGIN.username, LOGIN.password);
+    cy.goToHomePage();
+  });
   it('add and ingest data', () => {
     goToAddNewServicePage(SERVICE_TYPE.Database);
     const connectionInput = () => {
@@ -46,6 +52,16 @@ describe('RedShift Ingestion', () => {
       connectionInput,
       addIngestionInput,
       serviceName
+    );
+  });
+
+  it('Update table description and verify', () => {
+    updateDescriptionForIngestedTables(
+      serviceName,
+      tableName,
+      description,
+      SERVICE_TYPE.Database,
+      'tables'
     );
   });
 

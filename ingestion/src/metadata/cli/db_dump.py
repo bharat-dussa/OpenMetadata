@@ -1,3 +1,18 @@
+#  Copyright 2021 Collate
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#  http://www.apache.org/licenses/LICENSE-2.0
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+"""
+Database Dumping utility for the metadata CLI
+"""
+
 from pathlib import Path
 from typing import List
 
@@ -11,7 +26,10 @@ TABLES_DUMP_ALL = {
     "entity_extension",
     "field_relationship",
     "tag_usage",
+    "openmetadata_settings",
 }
+
+CUSTOM_TABLES = {"entity_extension_time_series": {"exclude_columns": ["timestamp"]}}
 NOT_MIGRATE = {"DATABASE_CHANGE_LOG"}
 
 STATEMENT_JSON = "SELECT json FROM {table}"
@@ -64,6 +82,40 @@ def dump_all(tables: List[str], engine: Engine, output: Path) -> None:
                 file.write(insert)
 
 
+def dump_entity_custom(engine: Engine, output: Path, inspector) -> None:
+    """
+    This function is used to dump entities with custom handling
+    """
+    with open(output, "a") as file:
+        for table, data in CUSTOM_TABLES.items():
+
+            truncate = STATEMENT_TRUNCATE.format(table=table)
+            file.write(truncate)
+
+            columns = inspector.get_columns(table_name=table)
+
+            STATEMENT_ALL_NEW = "SELECT {cols} FROM {table}".format(
+                cols=",".join(
+                    col["name"]
+                    for col in columns
+                    if col["name"] not in data["exclude_columns"]
+                ),
+                table=table,
+            )
+            res = engine.execute(text(STATEMENT_ALL_NEW)).all()
+            for row in res:
+                insert = "INSERT INTO {table} ({cols}) VALUES ({data});\n".format(
+                    table=table,
+                    data=",".join(clean_col(col) for col in row),
+                    cols=",".join(
+                        col["name"]
+                        for col in columns
+                        if col["name"] not in data["exclude_columns"]
+                    ),
+                )
+                file.write(insert)
+
+
 def dump(engine: Engine, output: Path, schema: str = None) -> None:
     """
     Get all tables from the database and dump
@@ -77,8 +129,11 @@ def dump(engine: Engine, output: Path, schema: str = None) -> None:
     dump_json_tables = [
         table
         for table in tables
-        if table not in TABLES_DUMP_ALL and table not in NOT_MIGRATE
+        if table not in TABLES_DUMP_ALL
+        and table not in NOT_MIGRATE
+        and table not in CUSTOM_TABLES
     ]
 
     dump_all(tables=list(TABLES_DUMP_ALL), engine=engine, output=output)
     dump_json(tables=dump_json_tables, engine=engine, output=output)
+    dump_entity_custom(engine=engine, output=output, inspector=inspector)

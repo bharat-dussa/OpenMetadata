@@ -9,6 +9,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+"""
+This module defines the CLI commands for OpenMetada
+"""
+
 import logging
 import os
 import pathlib
@@ -26,6 +30,7 @@ from metadata.cli.ingest import run_ingest
 from metadata.cli.openmetadata_imports_migration import (
     run_openmetadata_imports_migration,
 )
+from metadata.cli.restore import run_restore
 from metadata.config.common import load_config_file
 from metadata.orm_profiler.api.workflow import ProfilerWorkflow
 from metadata.test_suite.api.workflow import TestSuiteWorkflow
@@ -53,6 +58,7 @@ def check() -> None:
     required=False,
 )
 def metadata(debug: bool, log_level: str) -> None:
+    """Method to set logger information"""
     if debug:
         set_loggers_level(logging.DEBUG)
     elif log_level:
@@ -95,7 +101,7 @@ def test(config: str) -> None:
         workflow = TestSuiteWorkflow.create(workflow_test_config_dict)
     except Exception as exc:
         logger.debug(traceback.format_exc())
-        print_init_error(exc, workflow_test_config_dict, WorkflowType.profile)
+        print_init_error(exc, workflow_test_config_dict, WorkflowType.PROFILE)
         sys.exit(1)
 
     workflow.execute()
@@ -123,7 +129,7 @@ def profile(config: str) -> None:
         workflow = ProfilerWorkflow.create(workflow_config_dict)
     except Exception as exc:
         logger.debug(traceback.format_exc())
-        print_init_error(exc, workflow_config_dict, WorkflowType.profile)
+        print_init_error(exc, workflow_config_dict, WorkflowType.PROFILE)
         sys.exit(1)
 
     workflow.execute()
@@ -140,7 +146,10 @@ def webhook(host: str, port: int) -> None:
     """Simple Webserver to test webhook metadata events"""
 
     class WebhookHandler(BaseHTTPRequestHandler):
+        """WebhookHandler class to define the rest API methods"""
+
         def do_GET(self):
+            """WebhookHandler GET API method"""
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
@@ -149,6 +158,7 @@ def webhook(host: str, port: int) -> None:
             self.wfile.write(bytes(message, "utf8"))
 
         def do_POST(self):
+            """WebhookHandler POST API method"""
             content_len = int(self.headers.get("Content-Length"))
             post_body = self.rfile.read(content_len)
             self.send_response(200)
@@ -274,7 +284,6 @@ def docker(
     "--upload",
     help="S3 endpoint, bucket & key to upload the backup file",
     nargs=3,
-    type=click.Tuple([str, str, str]),
     default=None,
     required=False,
 )
@@ -328,19 +337,119 @@ def backup(
 
 
 @metadata.command()
-@click.option("-d", "--dir-path", default="/ingestion/examples/airflow/dags")
+@click.option(
+    "-d",
+    "--dir-path",
+    default="/opt/airflow/dags",
+    type=click.Path(exists=True, dir_okay=True),
+    help="Path to the DAG folder. Default to `/opt/airflow/dags`",
+)
+@click.option(
+    "--change-config-file-path",
+    is_flag=True,
+    help="Flag option. If pass this will try to change the path of the dag config files",
+)
 def openmetadata_imports_migration(
     dir_path: str,
+    change_config_file_path: bool,
 ) -> None:
     """Update DAG files generated after creating workflow in 0.11 and before.
 
     In 0.12 the airflow managed API package name changed from `openmetadata` to `openmetadata_managed_apis`
-    hence breaking existing DAGs
-
-    Args:
-        dir_path (str): _description_
+    hence breaking existing DAGs. The `dag_generated_config` folder also changed location in Docker.
+    This small CLI utility allows you to update both elements.
     """
-    run_openmetadata_imports_migration(dir_path)
+    run_openmetadata_imports_migration(dir_path, change_config_file_path)
+
+
+@metadata.command()
+@click.option(
+    "-h",
+    "--host",
+    help="Host that runs the database",
+    required=True,
+)
+@click.option(
+    "-u",
+    "--user",
+    help="User to run the restore backup",
+    required=True,
+)
+@click.option(
+    "-p",
+    "--password",
+    help="Credentials for the user",
+    required=True,
+)
+@click.option(
+    "-d",
+    "--database",
+    help="Database to restore",
+    required=True,
+)
+@click.option(
+    "--port",
+    help="Database service port",
+    default="3306",
+    required=False,
+)
+@click.option(
+    "--input",
+    help="Local backup file path for restore",
+    type=click.Path(exists=False, dir_okay=True),
+    default=None,
+    required=True,
+)
+@click.option(
+    "-o",
+    "--options",
+    multiple=True,
+    default=None,
+)
+@click.option(
+    "-a",
+    "--arguments",
+    multiple=True,
+    default=None,
+)
+@click.option(
+    "-s",
+    "--schema",
+    default=None,
+    required=False,
+)
+def restore(
+    host: str,
+    user: str,
+    password: str,
+    database: str,
+    port: str,
+    input: str,
+    options: List[str],
+    arguments: List[str],
+    schema: str,
+) -> None:
+    """
+    Run a restore for the metadata DB.
+
+    We can pass as many connection options as required with `-o <opt1>, -o <opt2> [...]`
+    Same with connection arguments `-a <arg1>, -a <arg2> [...]`
+
+    If `-s` or `--schema` is provided, we will trigger a Postgres Restore instead
+    of a MySQL restore. This is the value of the schema containing the OpenMetadata
+    tables.
+    """
+    run_restore(
+        host,
+        user,
+        password,
+        database,
+        port,
+        input,
+        options,
+        arguments,
+        schema,
+    )
 
 
 metadata.add_command(check)

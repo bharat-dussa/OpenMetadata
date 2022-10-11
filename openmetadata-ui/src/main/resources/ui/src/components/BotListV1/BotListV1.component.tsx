@@ -24,9 +24,12 @@ import {
   PAGE_SIZE_LARGE,
 } from '../../constants/constants';
 import { BOTS_DOCS } from '../../constants/docs.constants';
-import { NO_PERMISSION_FOR_ACTION } from '../../constants/HelperTextUtil';
+import {
+  INGESTION_BOT_CANT_BE_DELETED,
+  NO_PERMISSION_FOR_ACTION,
+} from '../../constants/HelperTextUtil';
 import { EntityType } from '../../enums/entity.enum';
-import { Bot } from '../../generated/entity/bot';
+import { Bot, BotType } from '../../generated/entity/bot';
 import { Operation } from '../../generated/entity/policies/accessControl/rule';
 import { Include } from '../../generated/type/include';
 import { Paging } from '../../generated/type/paging';
@@ -59,10 +62,15 @@ const BotListV1 = ({
   const [handleErrorPlaceholder, setHandleErrorPlaceholder] = useState(false);
   const [searchedData, setSearchedData] = useState<Bot[]>([]);
 
-  const createPermission = checkPermission(
-    Operation.Create,
-    ResourceEntity.BOT,
-    permissions
+  /**
+   * Bot creation is two step process so here we should check for
+   * Create User and Create Bot both permissions
+   */
+  const createPermission = useMemo(
+    () =>
+      checkPermission(Operation.Create, ResourceEntity.BOT, permissions) &&
+      checkPermission(Operation.Create, ResourceEntity.USER, permissions),
+    [permissions]
   );
 
   const deletePermission = useMemo(
@@ -109,11 +117,9 @@ const BotListV1 = ({
         render: (_, record) => (
           <Link
             className="hover:tw-underline tw-cursor-pointer"
-            data-testid={`bot-link-${getEntityName(record?.botUser)}`}
-            to={getBotsPath(
-              record?.botUser?.fullyQualifiedName || record?.botUser?.name || ''
-            )}>
-            {getEntityName(record?.botUser)}
+            data-testid={`bot-link-${getEntityName(record)}`}
+            to={getBotsPath(record?.fullyQualifiedName || record?.name || '')}>
+            {getEntityName(record)}
           </Link>
         ),
       },
@@ -122,10 +128,8 @@ const BotListV1 = ({
         dataIndex: 'description',
         key: 'description',
         render: (_, record) =>
-          record?.botUser?.description ? (
-            <RichTextEditorPreviewer
-              markdown={record?.botUser?.description || ''}
-            />
+          record?.description ? (
+            <RichTextEditorPreviewer markdown={record?.description || ''} />
           ) : (
             <span data-testid="no-description">No Description</span>
           ),
@@ -135,27 +139,35 @@ const BotListV1 = ({
         dataIndex: 'id',
         key: 'id',
         width: 90,
-        render: (_, record) => (
-          <Space align="center" size={8}>
-            <Tooltip
-              placement="bottom"
-              title={deletePermission ? 'Delete' : NO_PERMISSION_FOR_ACTION}>
-              <Button
-                data-testid={`bot-delete-${getEntityName(record?.botUser)}`}
-                disabled={!deletePermission}
-                icon={
-                  <SVGIcons
-                    alt="Delete"
-                    className="tw-w-4"
-                    icon={Icons.DELETE}
-                  />
-                }
-                type="text"
-                onClick={() => setSelectedUser(record)}
-              />
-            </Tooltip>
-          </Space>
-        ),
+        render: (_, record) => {
+          const isIngestionBot = record.botType === BotType.IngestionBot;
+          const title = isIngestionBot
+            ? INGESTION_BOT_CANT_BE_DELETED
+            : deletePermission
+            ? 'Delete'
+            : NO_PERMISSION_FOR_ACTION;
+          const isDisabled = !deletePermission || isIngestionBot;
+
+          return (
+            <Space align="center" size={8}>
+              <Tooltip placement="bottom" title={title}>
+                <Button
+                  data-testid={`bot-delete-${getEntityName(record)}`}
+                  disabled={isDisabled}
+                  icon={
+                    <SVGIcons
+                      alt="Delete"
+                      className="tw-w-4"
+                      icon={Icons.DELETE}
+                    />
+                  }
+                  type="text"
+                  onClick={() => setSelectedUser(record)}
+                />
+              </Tooltip>
+            </Space>
+          );
+        },
       },
     ],
     []

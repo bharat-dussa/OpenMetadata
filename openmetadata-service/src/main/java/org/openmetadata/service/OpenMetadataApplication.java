@@ -69,11 +69,11 @@ import org.openmetadata.service.exception.CatalogGenericExceptionMapper;
 import org.openmetadata.service.exception.ConstraintViolationExceptionMapper;
 import org.openmetadata.service.exception.JsonMappingExceptionMapper;
 import org.openmetadata.service.fernet.Fernet;
+import org.openmetadata.service.jdbi3.CollectionDAO;
 import org.openmetadata.service.jdbi3.locator.ConnectionAwareAnnotationSqlLocator;
 import org.openmetadata.service.migration.Migration;
 import org.openmetadata.service.migration.MigrationConfiguration;
 import org.openmetadata.service.resources.CollectionRegistry;
-import org.openmetadata.service.resources.search.SearchResource;
 import org.openmetadata.service.secrets.SecretsManager;
 import org.openmetadata.service.secrets.SecretsManagerFactory;
 import org.openmetadata.service.secrets.SecretsManagerMigrationService;
@@ -84,7 +84,6 @@ import org.openmetadata.service.security.jwt.JWTTokenGenerator;
 import org.openmetadata.service.socket.FeedServlet;
 import org.openmetadata.service.socket.SocketAddressFilter;
 import org.openmetadata.service.socket.WebSocketManager;
-import org.openmetadata.service.util.ConfigurationHolder;
 import org.openmetadata.service.util.EmailUtil;
 
 /** Main catalog application */
@@ -96,16 +95,12 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
   public void run(OpenMetadataApplicationConfig catalogConfig, Environment environment)
       throws ClassNotFoundException, IllegalAccessException, InstantiationException, NoSuchMethodException,
           InvocationTargetException, IOException {
-    // This should be first only as this holder has some config
-    ConfigurationHolder.getInstance().init(catalogConfig);
     // init email Util for handling
     EmailUtil.EmailUtilBuilder.build(catalogConfig.getSmtpSettings());
     final Jdbi jdbi = createAndSetupJDBI(environment, catalogConfig.getDataSourceFactory());
     final SecretsManager secretsManager =
         SecretsManagerFactory.createSecretsManager(
             catalogConfig.getSecretsManagerConfiguration(), catalogConfig.getClusterName());
-
-    secretsManager.encryptAirflowConnection(catalogConfig.getAirflowConfiguration());
 
     // Configure the Fernet instance
     Fernet.getInstance().setFernetKey(catalogConfig);
@@ -141,13 +136,13 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
     // start event hub before registering publishers
     EventPubSub.start();
 
-    registerResources(catalogConfig, environment, jdbi, secretsManager);
+    registerResources(catalogConfig, environment, jdbi);
 
     // Register Event Handler
     registerEventFilter(catalogConfig, environment, jdbi);
     environment.lifecycle().manage(new ManagedShutdown());
     // Register Event publishers
-    registerEventPublisher(catalogConfig);
+    registerEventPublisher(catalogConfig, jdbi);
 
     // Check if migration is need from local secret manager to configured one and migrate
     new SecretsManagerMigrationService(secretsManager, catalogConfig.getClusterName())
@@ -155,7 +150,7 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
 
     // start authorizer after event publishers
     // authorizer creates admin/bot users, ES publisher should start before to index users created by authorizer
-    authorizer.init(catalogConfig.getAuthorizerConfiguration(), jdbi);
+    authorizer.init(catalogConfig, jdbi);
     FilterRegistration.Dynamic micrometerFilter =
         environment.servlets().addFilter("MicrometerHttpFilter", new MicrometerHttpFilter());
     micrometerFilter.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
@@ -265,21 +260,18 @@ public class OpenMetadataApplication extends Application<OpenMetadataApplication
     }
   }
 
-  private void registerEventPublisher(OpenMetadataApplicationConfig openMetadataApplicationConfig) {
+  private void registerEventPublisher(OpenMetadataApplicationConfig openMetadataApplicationConfig, Jdbi jdbi) {
     // register ElasticSearch Event publisher
     if (openMetadataApplicationConfig.getElasticSearchConfiguration() != null) {
       ElasticSearchEventPublisher elasticSearchEventPublisher =
-          new ElasticSearchEventPublisher(openMetadataApplicationConfig.getElasticSearchConfiguration());
+          new ElasticSearchEventPublisher(
+              openMetadataApplicationConfig.getElasticSearchConfiguration(), jdbi.onDemand(CollectionDAO.class));
       EventPubSub.addEventHandler(elasticSearchEventPublisher);
     }
   }
 
-  private void registerResources(
-      OpenMetadataApplicationConfig config, Environment environment, Jdbi jdbi, SecretsManager secretsManager) {
-    CollectionRegistry.getInstance().registerResources(jdbi, environment, config, authorizer, secretsManager);
-    if (config.getElasticSearchConfiguration() != null) {
-      environment.jersey().register(new SearchResource(config.getElasticSearchConfiguration()));
-    }
+  private void registerResources(OpenMetadataApplicationConfig config, Environment environment, Jdbi jdbi) {
+    CollectionRegistry.getInstance().registerResources(jdbi, environment, config, authorizer);
     environment.jersey().register(new JsonPatchProvider());
     ErrorPageErrorHandler eph = new ErrorPageErrorHandler();
     eph.addErrorPage(Response.Status.NOT_FOUND.getStatusCode(), "/");

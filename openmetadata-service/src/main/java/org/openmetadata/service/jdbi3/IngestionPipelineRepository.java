@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.json.JSONObject;
 import org.openmetadata.schema.entity.services.ingestionPipelines.AirflowConfig;
 import org.openmetadata.schema.entity.services.ingestionPipelines.IngestionPipeline;
+import org.openmetadata.schema.entity.services.ingestionPipelines.PipelineType;
 import org.openmetadata.schema.metadataIngestion.DatabaseServiceMetadataPipeline;
 import org.openmetadata.schema.metadataIngestion.LogLevels;
 import org.openmetadata.schema.services.connections.metadata.OpenMetadataServerConnection;
@@ -28,6 +29,7 @@ import org.openmetadata.schema.type.Relationship;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.resources.services.ingestionpipelines.IngestionPipelineResource;
 import org.openmetadata.service.secrets.SecretsManager;
+import org.openmetadata.service.secrets.SecretsManagerFactory;
 import org.openmetadata.service.util.EntityUtil.Fields;
 import org.openmetadata.service.util.FullyQualifiedName;
 import org.openmetadata.service.util.JsonUtils;
@@ -38,9 +40,7 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
   private static final String PATCH_FIELDS = "owner,sourceConfig,airflowConfig,loggerLevel,enabled";
   private static PipelineServiceClient pipelineServiceClient;
 
-  private final SecretsManager secretsManager;
-
-  public IngestionPipelineRepository(CollectionDAO dao, SecretsManager secretsManager) {
+  public IngestionPipelineRepository(CollectionDAO dao) {
     super(
         IngestionPipelineResource.COLLECTION_PATH,
         Entity.INGESTION_PIPELINE,
@@ -49,7 +49,6 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
         dao,
         PATCH_FIELDS,
         UPDATE_FIELDS);
-    this.secretsManager = secretsManager;
   }
 
   @Override
@@ -82,10 +81,12 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
     ingestionPipeline.withOwner(null).withService(null).withHref(null);
 
     // encrypt config in case of local secret manager
+    SecretsManager secretsManager = SecretsManagerFactory.getSecretsManager();
     if (secretsManager.isLocal()) {
       secretsManager.encryptOrDecryptDbtConfigSource(ingestionPipeline, service, true);
       store(ingestionPipeline.getId(), ingestionPipeline, update);
-    } else {
+    } else if (service.getType().equals(Entity.DATABASE_SERVICE)
+        && ingestionPipeline.getPipelineType().equals(PipelineType.METADATA)) {
       // otherwise, nullify the config since it will be kept outside OM
       DatabaseServiceMetadataPipeline databaseServiceMetadataPipeline =
           JsonUtils.convertValue(
@@ -98,6 +99,8 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
       databaseServiceMetadataPipeline.setDbtConfigSource(dbtConfigSource);
       ingestionPipeline.getSourceConfig().setConfig(databaseServiceMetadataPipeline);
       secretsManager.encryptOrDecryptDbtConfigSource(ingestionPipeline, service, true);
+    } else {
+      store(ingestionPipeline.getId(), ingestionPipeline, update);
     }
 
     // Restore the relationships
@@ -148,6 +151,7 @@ public class IngestionPipelineRepository extends EntityRepository<IngestionPipel
     }
 
     private void updateSourceConfig() throws JsonProcessingException {
+      SecretsManager secretsManager = SecretsManagerFactory.getSecretsManager();
       secretsManager.encryptOrDecryptDbtConfigSource(original, false);
 
       JSONObject origSourceConfig = new JSONObject(JsonUtils.pojoToJson(original.getSourceConfig().getConfig()));

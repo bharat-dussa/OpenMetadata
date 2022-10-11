@@ -26,19 +26,18 @@ import org.openmetadata.schema.ServiceConnectionEntityInterface;
 import org.openmetadata.schema.ServiceEntityInterface;
 import org.openmetadata.schema.entity.services.ingestionPipelines.IngestionPipeline;
 import org.openmetadata.schema.entity.services.ingestionPipelines.PipelineType;
-import org.openmetadata.schema.metadataIngestion.DatabaseServiceMetadataPipeline;
+import org.openmetadata.schema.entity.teams.User;
 import org.openmetadata.service.Entity;
 import org.openmetadata.service.exception.SecretsManagerMigrationException;
 import org.openmetadata.service.jdbi3.ChangeEventRepository;
-import org.openmetadata.service.jdbi3.IngestionPipelineRepository;
+import org.openmetadata.service.jdbi3.EntityRepository;
 import org.openmetadata.service.jdbi3.ListFilter;
 import org.openmetadata.service.jdbi3.ServiceEntityRepository;
 import org.openmetadata.service.resources.CollectionRegistry;
+import org.openmetadata.service.resources.CollectionRegistry.CollectionDetails;
 import org.openmetadata.service.resources.events.EventResource;
 import org.openmetadata.service.resources.services.ServiceEntityResource;
-import org.openmetadata.service.resources.services.ingestionpipelines.IngestionPipelineResource;
 import org.openmetadata.service.util.EntityUtil;
-import org.openmetadata.service.util.JsonUtils;
 
 /**
  * Migration service from LocalSecretManager to configured one.
@@ -63,13 +62,16 @@ public class SecretsManagerMigrationService {
 
   private final ChangeEventRepository changeEventRepository;
 
-  private final IngestionPipelineRepository ingestionPipelineRepository;
+  private final EntityRepository<IngestionPipeline> ingestionPipelineRepository;
+
+  private final EntityRepository<User> userRepository;
 
   public SecretsManagerMigrationService(SecretsManager secretsManager, String clusterName) {
     this.newSecretManager = secretsManager;
     this.connectionTypeRepositoriesMap = retrieveConnectionTypeRepositoriesMap();
     this.changeEventRepository = retrieveChangeEventRepository();
-    this.ingestionPipelineRepository = retrieveIngestionPipelineRepository();
+    this.ingestionPipelineRepository = Entity.getEntityRepository(Entity.INGESTION_PIPELINE);
+    this.userRepository = Entity.getEntityRepository(Entity.USER);
     // by default, it is going to be LOCAL
     this.oldSecretManager = SecretsManagerFactory.createSecretsManager(null, clusterName);
   }
@@ -78,8 +80,26 @@ public class SecretsManagerMigrationService {
     if (!newSecretManager.isLocal()) {
       migrateServices();
       migrateIngestionPipelines();
+      migrateBotUsersCredentials();
     } else {
       LOG.info("Local secrets manager does not need to check if migration is needed.");
+    }
+  }
+
+  private void migrateBotUsersCredentials() {
+    LOG.info(
+        String.format(
+            "Checking if bot users credentials migration is needed for secrets manager: [%s]",
+            newSecretManager.getSecretsManagerProvider().value()));
+    List<User> notStoredUsers = retrieveNotStoredUsers();
+    if (!notStoredUsers.isEmpty()) {
+      notStoredUsers.forEach(this::migrateBotUser);
+      deleteChangeEventsFor(Entity.USER);
+    } else {
+      LOG.info(
+          String.format(
+              "All bot users credentials are already safely stored in [%s] secrets manager",
+              newSecretManager.getSecretsManagerProvider().value()));
     }
   }
 
@@ -108,7 +128,7 @@ public class SecretsManagerMigrationService {
     List<IngestionPipeline> notStoredIngestionPipelines = retrieveNotStoredIngestionPipelines();
     if (!notStoredIngestionPipelines.isEmpty()) {
       notStoredIngestionPipelines.forEach(this::migrateIngestionPipelines);
-      deleteChangeEventsForIngestionPipelines();
+      deleteChangeEventsFor(Entity.INGESTION_PIPELINE);
     } else {
       LOG.info(
           String.format(
@@ -203,12 +223,51 @@ public class SecretsManagerMigrationService {
               ingestionPipelineRepository.dao.listCount(new ListFilter()),
               null)
           .getData().stream()
-          .filter(this::hasSecurityConfig)
-          .filter(this::hasDbtConfig)
+          .filter(ingestionPipeline -> hasSecurityConfig(ingestionPipeline) || hasDbtConfig(ingestionPipeline))
           .collect(Collectors.toList());
     } catch (IOException e) {
       throw new SecretsManagerMigrationException(e.getMessage(), e.getCause());
     }
+  }
+
+  private void migrateBotUser(User botUser) {
+    try {
+      User user = userRepository.dao.findEntityById(botUser.getId());
+
+      Object authConfig =
+          oldSecretManager.encryptOrDecryptBotUserCredentials(
+              botUser.getName(), user.getAuthenticationMechanism().getConfig(), false);
+      authConfig = newSecretManager.encryptOrDecryptBotUserCredentials(botUser.getName(), authConfig, true);
+
+      user.getAuthenticationMechanism().setConfig(authConfig);
+
+      userRepository.dao.update(user);
+    } catch (IOException e) {
+      throw new SecretsManagerMigrationException(e.getMessage(), e.getCause());
+    }
+  }
+
+  private List<User> retrieveNotStoredUsers() {
+    try {
+      return userRepository
+          .listAfter(
+              null,
+              new EntityUtil.Fields(List.of("authenticationMechanism")),
+              new ListFilter(),
+              userRepository.dao.listCount(new ListFilter()),
+              null)
+          .getData().stream()
+          .filter(this::isBotWithCredentials)
+          .collect(Collectors.toList());
+    } catch (IOException e) {
+      throw new SecretsManagerMigrationException(e.getMessage(), e.getCause());
+    }
+  }
+
+  private boolean isBotWithCredentials(User user) {
+    return Boolean.TRUE.equals(user.getIsBot())
+        && user.getAuthenticationMechanism() != null
+        && user.getAuthenticationMechanism().getConfig() != null;
   }
 
   private boolean hasSecurityConfig(IngestionPipeline ingestionPipeline) {
@@ -218,11 +277,7 @@ public class SecretsManagerMigrationService {
 
   private boolean hasDbtConfig(IngestionPipeline ingestionPipeline) {
     return ingestionPipeline.getService().getType().equals(Entity.DATABASE_SERVICE)
-        && ingestionPipeline.getPipelineType().equals(PipelineType.METADATA)
-        && JsonUtils.convertValue(
-                    ingestionPipeline.getSourceConfig().getConfig(), DatabaseServiceMetadataPipeline.class)
-                .getDbtConfigSource()
-            != null;
+        && ingestionPipeline.getPipelineType().equals(PipelineType.METADATA);
   }
 
   /** This method delete all the change events which could contain connection config parameters for services */
@@ -232,12 +287,12 @@ public class SecretsManagerMigrationService {
         .forEach(
             serviceType -> {
               try {
-                changeEventRepository.deleteAll(
+                deleteChangeEventsFor(
                     Entity.class
                         .getField(serviceType.value().toUpperCase(Locale.ROOT) + "_SERVICE")
                         .get(Entity.class)
                         .toString());
-              } catch (NoSuchFieldException | IOException | IllegalAccessException e) {
+              } catch (NoSuchFieldException | IllegalAccessException e) {
                 throw new SecretsManagerMigrationException(e.getMessage(), e.getCause());
               }
             });
@@ -247,13 +302,8 @@ public class SecretsManagerMigrationService {
    * This method delete all the change events which could contain auth provider config parameters for ingestion
    * pipelines
    */
-  private void deleteChangeEventsForIngestionPipelines() {
-    ChangeEventRepository changeEventRepository = retrieveChangeEventRepository();
-    try {
-      changeEventRepository.deleteAll(Entity.INGESTION_PIPELINE);
-    } catch (IOException e) {
-      throw new SecretsManagerMigrationException(e.getMessage(), e.getCause());
-    }
+  private void deleteChangeEventsFor(String entityType) {
+    changeEventRepository.deleteAll(entityType);
   }
 
   private Map<Class<? extends ServiceConnectionEntityInterface>, ServiceEntityRepository<?, ?>>
@@ -273,44 +323,22 @@ public class SecretsManagerMigrationService {
 
   private ChangeEventRepository retrieveChangeEventRepository() {
     return CollectionRegistry.getInstance().getCollectionMap().values().stream()
-        .map(this::retrieveChangeEventRepository)
+        .map(collectionDetails -> retrieveResource(collectionDetails, EventResource.class))
         .filter(Optional::isPresent)
-        .map(Optional::get)
+        .map(res -> res.get().getDao())
         .findFirst()
         .orElseThrow(() -> new SecretsManagerMigrationException("Unexpected error: ChangeEventRepository not found."));
   }
 
-  private IngestionPipelineRepository retrieveIngestionPipelineRepository() {
-    return CollectionRegistry.getInstance().getCollectionMap().values().stream()
-        .map(this::retrieveIngestionPipelineRepository)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .findFirst()
-        .orElseThrow(
-            () -> new SecretsManagerMigrationException("Unexpected error: IngestionPipelineRepository not found."));
-  }
-
-  private Optional<IngestionPipelineRepository> retrieveIngestionPipelineRepository(
-      CollectionRegistry.CollectionDetails collectionDetails) {
+  private <T> Optional<T> retrieveResource(CollectionDetails collectionDetails, Class<T> clazz) {
     Class<?> collectionDetailsClass = extractCollectionDetailsClass(collectionDetails);
-    if (IngestionPipelineResource.class.equals(collectionDetailsClass)) {
-      return Optional.of(
-          ((IngestionPipelineResource) collectionDetails.getResource()).getIngestionPipelineRepository());
+    if (clazz.equals(collectionDetailsClass)) {
+      return Optional.of(clazz.cast(collectionDetails.getResource()));
     }
     return Optional.empty();
   }
 
-  private Optional<ChangeEventRepository> retrieveChangeEventRepository(
-      CollectionRegistry.CollectionDetails collectionDetails) {
-    Class<?> collectionDetailsClass = extractCollectionDetailsClass(collectionDetails);
-    if (EventResource.class.equals(collectionDetailsClass)) {
-      return Optional.of(((EventResource) collectionDetails.getResource()).getDao());
-    }
-    return Optional.empty();
-  }
-
-  private Optional<ServiceEntityRepository<?, ?>> retrieveServiceRepository(
-      CollectionRegistry.CollectionDetails collectionDetails) {
+  private Optional<ServiceEntityRepository<?, ?>> retrieveServiceRepository(CollectionDetails collectionDetails) {
     Class<?> collectionDetailsClass = extractCollectionDetailsClass(collectionDetails);
     if (ServiceEntityResource.class.isAssignableFrom(collectionDetailsClass)) {
       return Optional.of(
@@ -319,7 +347,7 @@ public class SecretsManagerMigrationService {
     return Optional.empty();
   }
 
-  private Class<?> extractCollectionDetailsClass(CollectionRegistry.CollectionDetails collectionDetails) {
+  private Class<?> extractCollectionDetailsClass(CollectionDetails collectionDetails) {
     Class<?> collectionDetailsClass;
     try {
       collectionDetailsClass = Class.forName(collectionDetails.getResourceClass());

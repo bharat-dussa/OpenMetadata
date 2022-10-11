@@ -11,15 +11,26 @@
  *  limitations under the License.
  */
 
-import { addNewTagToEntity, descriptionBox, interceptURL, verifyResponseStatusCode } from '../../common/common';
-import { NEW_TAG, NEW_TAG_CATEGORY, SEARCH_ENTITY_TABLE } from '../../constants/constants';
+import { addNewTagToEntity, descriptionBox, interceptURL, login, verifyResponseStatusCode } from '../../common/common';
+import { LOGIN, NEW_TAG, NEW_TAG_CATEGORY, SEARCH_ENTITY_TABLE } from '../../constants/constants';
 
 describe('Tags page should work', () => {
-  beforeEach(() => {
+  before(() => {
+    cy.clearLocalStorageSnapshot();
+    login(LOGIN.username, LOGIN.password);
     cy.goToHomePage();
+    cy.saveLocalStorage('localstorage');
+  });
+
+  beforeEach(() => {
+    cy.log('Restoring local storage snapshot');
+    cy.restoreLocalStorage('localstorage');
+    cy.clickOnLogo();
+    interceptURL('GET', '/api/v1/tags*', 'getTags');
     cy.get('[data-testid="appbar-item-tags"]')
       .should('be.visible')
       .click({ force: true });
+    verifyResponseStatusCode('@getTags', 200);
   });
 
   it('Required Details should be available', () => {
@@ -28,9 +39,10 @@ describe('Tags page should work', () => {
     cy.get('[data-testid="delete-tag-category-button"]').should('be.visible');
     cy.get('[data-testid="description"]').should('be.visible');
     cy.get('[data-testid="table"]').should('be.visible');
-    cy.get('[data-testid="heading-name"]').should('be.visible');
-    cy.get('[data-testid="heading-description"]').should('be.visible');
-    cy.get('[data-testid="heading-actions"]').should('be.visible');
+
+    cy.get('.ant-table-thead > tr > .ant-table-cell').eq(0).contains('Name').should('be.visible')
+    cy.get('.ant-table-thead > tr > .ant-table-cell').eq(1).contains('Description').should('be.visible')
+    cy.get('.ant-table-thead > tr > .ant-table-cell').eq(2).contains('Actions').should('be.visible')
 
     cy.get('.activeCategory > .tag-category')
       .should('be.visible')
@@ -88,11 +100,11 @@ describe('Tags page should work', () => {
 
     verifyResponseStatusCode('@createTag', 200);
 
-    cy.get('[data-testid="table-body"]').should('contain', NEW_TAG.name);
+    cy.get('tbody').should('contain', NEW_TAG.name);
   });
 
   it('Use newly created tag to any entity should work', () => {
-    const entity = SEARCH_ENTITY_TABLE.table_2.term;
+    const entity = SEARCH_ENTITY_TABLE.table_2;
     addNewTagToEntity(entity, `${NEW_TAG_CATEGORY.name}.${NEW_TAG.name}`);
   });
 
@@ -138,7 +150,7 @@ describe('Tags page should work', () => {
       .click()
       .parent()
       .should('have.class', 'activeCategory');
-    cy.get('.tableBody-row > :nth-child(1)')
+    cy.get('.ant-table-row > :nth-child(1)')
       .contains(NEW_TAG.name)
       .should('be.visible');
 
@@ -156,7 +168,7 @@ describe('Tags page should work', () => {
     cy.get('[data-testid="save-button"]').should('be.visible').click();
     verifyResponseStatusCode('@deleteTag', 200);
     cy.get('.tw-modal-container').should('not.exist');
-    cy.get('.tableBody-cell').contains(NEW_TAG.name).should('not.exist');
+    cy.get('.ant-table-placeholder').should('be.visible');
   });
 
   it('Delete Tag flow should work properly', () => {

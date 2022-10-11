@@ -94,7 +94,8 @@
         "VARIANT",
         "GEOMETRY",
         "POINT",
-        "POLYGON"
+        "POLYGON",
+        "BYTEA"
       ]
     },
     "constraint": {
@@ -640,6 +641,14 @@
         "owner": {
           "description": "Owner of this Model.",
           "$ref": "../../type/entityReference.json",
+          "default": null
+        },
+        "tags": {
+          "description": "Tags for this data model.",
+          "type": "array",
+          "items": {
+            "$ref": "../../type/tagLabel.json"
+          },
           "default": null
         },
         "columns": {

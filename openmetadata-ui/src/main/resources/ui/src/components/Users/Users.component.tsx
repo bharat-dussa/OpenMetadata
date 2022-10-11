@@ -12,7 +12,7 @@
  */
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Card, Image, Space, Switch } from 'antd';
+import { Card, Image, Space, Switch, Typography } from 'antd';
 import { AxiosError } from 'axios';
 import { capitalize, isEmpty, isEqual, isNil, toLower } from 'lodash';
 import { observer } from 'mobx-react';
@@ -26,6 +26,8 @@ import React, {
 } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import Select from 'react-select';
+import { useAuthContext } from '../../authentication/auth-provider/AuthProvider';
+import { changePassword } from '../../axiosAPIs/auth-API';
 import { getRoles } from '../../axiosAPIs/rolesAPIV1';
 import { getTeams } from '../../axiosAPIs/teamsAPI';
 import {
@@ -40,6 +42,11 @@ import {
   USER_PROFILE_TABS,
 } from '../../constants/usersprofile.constants';
 import { FeedFilter } from '../../enums/mydata.enum';
+import { AuthTypes } from '../../enums/signin.enum';
+import {
+  ChangePasswordRequest,
+  RequestType,
+} from '../../generated/auth/changePasswordRequest';
 import { ThreadType } from '../../generated/entity/feed/thread';
 import { Role } from '../../generated/entity/teams/role';
 import { Team } from '../../generated/entity/teams/team';
@@ -56,12 +63,11 @@ import {
 } from '../../utils/ProfilerUtils';
 import { dropdownIcon as DropDownIcon } from '../../utils/svgconstant';
 import SVGIcons, { Icons } from '../../utils/SvgUtils';
-import { showErrorToast } from '../../utils/ToastUtils';
+import { showErrorToast, showSuccessToast } from '../../utils/ToastUtils';
 import ActivityFeedList from '../ActivityFeed/ActivityFeedList/ActivityFeedList';
 import { filterListTasks } from '../ActivityFeed/ActivityFeedList/ActivityFeedList.util';
 import { Button } from '../buttons/Button/Button';
 import Description from '../common/description/Description';
-import Ellipses from '../common/Ellipses/Ellipses';
 import ProfilePicture from '../common/ProfilePicture/ProfilePicture';
 import { reactSingleSelectCustomStyle } from '../common/react-select-component/reactSelectCustomStyle';
 import TabsPane from '../common/TabsPane/TabsPane';
@@ -69,6 +75,7 @@ import { leftPanelAntCardStyle } from '../containers/PageLayout';
 import PageLayoutV1 from '../containers/PageLayoutV1';
 import DropDownList from '../dropdown/DropDownList';
 import Loader from '../Loader/Loader';
+import ChangePasswordForm from './ChangePasswordForm';
 import { Option, Props } from './Users.interface';
 import { userPageFilterList } from './Users.util';
 
@@ -106,10 +113,17 @@ const Users = ({
   const history = useHistory();
   const [showFilterList, setShowFilterList] = useState(false);
   const [isImgUrlValid, SetIsImgUrlValid] = useState<boolean>(true);
-
+  const [isChangePassword, setIsChangePassword] = useState<boolean>(false);
   const location = useLocation();
-
   const isTaskType = isEqual(threadType, ThreadType.Task);
+
+  const { authConfig } = useAuthContext();
+
+  const { isAuthProviderBasic } = useMemo(() => {
+    return {
+      isAuthProviderBasic: authConfig?.provider === AuthTypes.BASIC,
+    };
+  }, [authConfig]);
 
   const handleFilterDropdownChange = useCallback(
     (_e: React.MouseEvent<HTMLElement, MouseEvent>, value?: string) => {
@@ -225,6 +239,26 @@ const Users = ({
     }
   };
 
+  const handleChangePassword = async (data: ChangePasswordRequest) => {
+    try {
+      const sendData = {
+        ...data,
+        ...(isAdminUser &&
+          !isLoggedinUser && {
+            username: userData.name,
+            requestType: RequestType.User,
+          }),
+      };
+      await changePassword(sendData);
+      setIsChangePassword(false);
+      showSuccessToast(
+        jsonData['api-success-messages']['update-password-success']
+      );
+    } catch (err) {
+      showErrorToast(err as AxiosError);
+    }
+  };
+
   useEffect(() => {
     setActiveTab(getUserCurrentTab(tab));
   }, [tab]);
@@ -232,7 +266,7 @@ const Users = ({
   const getDisplayNameComponent = () => {
     if (isAdminUser || isLoggedinUser || isAuthDisabled) {
       return (
-        <div className="tw-mt-4 tw-w-full tw-px-3">
+        <div className="tw-w-full">
           {isDisplayNameEdit ? (
             <Space className="tw-w-full" direction="vertical">
               <input
@@ -289,7 +323,7 @@ const Users = ({
       );
     } else {
       return (
-        <p className="tw-mt-2 tw-px-3">
+        <p className="tw-mt-2">
           {getEntityName(userData as unknown as EntityReference)}
         </p>
       );
@@ -299,7 +333,7 @@ const Users = ({
   const getDescriptionComponent = () => {
     if (isAdminUser || isLoggedinUser || isAuthDisabled) {
       return (
-        <div className="tw--ml-5 tw-flex tw-items-center tw-justify-between tw-px-3">
+        <div className="tw--ml-5 tw-flex tw-items-center tw-justify-between">
           <Description
             description={userData.description || ''}
             entityName={getEntityName(userData as unknown as EntityReference)}
@@ -316,12 +350,31 @@ const Users = ({
         <div className="tw--ml-2 tw-px-3">
           <p className="tw-mt-2">
             {userData.description || (
-              <span className="tw-no-description tw-p-2">No description </span>
+              <span className="tw-no-description">No description </span>
             )}
           </p>
         </div>
       );
     }
+  };
+
+  const getChangePasswordComponent = () => {
+    return (
+      <div>
+        <Typography.Text
+          className="text-primary text-xs cursor-pointer"
+          onClick={() => setIsChangePassword(true)}>
+          Change Password
+        </Typography.Text>
+
+        <ChangePasswordForm
+          isLoggedinUser={isLoggedinUser}
+          visible={isChangePassword}
+          onCancel={() => setIsChangePassword(false)}
+          onSave={(data) => handleChangePassword(data)}
+        />
+      </div>
+    );
   };
 
   const getTeamsComponent = () => {
@@ -333,9 +386,11 @@ const Users = ({
             data-testid={team.name}
             key={i}>
             <SVGIcons alt="icon" className="tw-w-4" icon={Icons.TEAMS_GREY} />
-            <Ellipses tooltip className="tw-w-48">
+            <Typography.Text
+              className="ant-typography-ellipsis-custom w-48"
+              ellipsis={{ tooltip: true }}>
               {getEntityName(team)}
-            </Ellipses>
+            </Typography.Text>
           </div>
         ))}
         {isEmpty(userData.teams) && (
@@ -466,9 +521,11 @@ const Users = ({
         {userData.roles?.map((role, i) => (
           <div className="tw-mb-2 tw-flex tw-items-center tw-gap-2" key={i}>
             <SVGIcons alt="icon" className="tw-w-4" icon={Icons.USERS} />
-            <Ellipses tooltip className="tw-w-48">
+            <Typography.Text
+              className="ant-typography-ellipsis-custom w-48"
+              ellipsis={{ tooltip: true }}>
               {getEntityName(role)}
-            </Ellipses>
+            </Typography.Text>
           </div>
         ))}
         {!userData.isAdmin && isEmpty(userData.roles) && (
@@ -606,9 +663,12 @@ const Users = ({
                   className="tw-mb-2 tw-flex tw-items-center tw-gap-2"
                   key={i}>
                   <SVGIcons alt="icon" className="tw-w-4" icon={Icons.USERS} />
-                  <Ellipses tooltip className="tw-w-48">
+
+                  <Typography.Text
+                    className="ant-typography-ellipsis-custom w-48"
+                    ellipsis={{ tooltip: true }}>
                     {getEntityName(inheritedRole)}
-                  </Ellipses>
+                  </Typography.Text>
                 </div>
               ))}
             </div>
@@ -636,34 +696,37 @@ const Users = ({
           style={{
             ...leftPanelAntCardStyle,
           }}>
-          <div className="tw-flex tw-flex-col">
-            {isImgUrlValid ? (
-              <Image
-                alt="profile"
-                className="tw-w-full"
-                preview={false}
-                referrerPolicy="no-referrer"
-                src={image || ''}
-                onError={() => {
-                  SetIsImgUrlValid(false);
-                }}
+          {isImgUrlValid ? (
+            <Image
+              alt="profile"
+              className="tw-w-full"
+              preview={false}
+              referrerPolicy="no-referrer"
+              src={image || ''}
+              onError={() => {
+                SetIsImgUrlValid(false);
+              }}
+            />
+          ) : (
+            <div style={{ width: 'inherit' }}>
+              <ProfilePicture
+                displayName={userData?.displayName || userData.name}
+                height="150"
+                id={userData?.id || ''}
+                name={userData?.name || ''}
+                textClass="tw-text-5xl"
+                width=""
               />
-            ) : (
-              <div style={{ width: 'inherit' }}>
-                <ProfilePicture
-                  displayName={userData?.displayName || userData.name}
-                  height="150"
-                  id={userData?.id || ''}
-                  name={userData?.name || ''}
-                  textClass="tw-text-5xl"
-                  width=""
-                />
-              </div>
-            )}
+            </div>
+          )}
+          <Space className="p-sm" direction="vertical" size={8}>
             {getDisplayNameComponent()}
-            <p className="tw-mt-2 tw-mx-3">{userData.email}</p>
+            <p>{userData.email}</p>
             {getDescriptionComponent()}
-          </div>
+            {isAuthProviderBasic &&
+              (isAdminUser || isLoggedinUser) &&
+              getChangePasswordComponent()}
+          </Space>
         </Card>
         {getTeamsComponent()}
         {getRolesComponent()}

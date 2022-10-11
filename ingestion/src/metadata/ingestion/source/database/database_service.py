@@ -27,6 +27,10 @@ from metadata.generated.schema.api.lineage.addLineage import AddLineageRequest
 from metadata.generated.schema.api.services.createStorageService import (
     CreateStorageServiceRequest,
 )
+from metadata.generated.schema.api.tags.createTag import CreateTagRequest
+from metadata.generated.schema.api.tags.createTagCategory import (
+    CreateTagCategoryRequest,
+)
 from metadata.generated.schema.entity.data.database import Database
 from metadata.generated.schema.entity.data.databaseSchema import DatabaseSchema
 from metadata.generated.schema.entity.data.location import Location
@@ -121,7 +125,7 @@ class DatabaseServiceTopology(ServiceTopology):
         ],
         children=["database"],
         post_process=[
-            "create_dbt_lineage",
+            "process_dbt_lineage_and_descriptions",
             "create_dbt_tests_suite_definition",
             "create_dbt_test_cases",
             "yield_view_lineage",
@@ -196,21 +200,23 @@ class SQLSourceStatus(SourceStatus):
     Reports the source status after ingestion
     """
 
-    success: List[str] = list()
-    failures: List[str] = list()
-    warnings: List[str] = list()
-    filtered: List[str] = list()
+    success: List[str] = []
+    failures: List[str] = []
+    warnings: List[str] = []
+    filtered: List[str] = []
 
     def scanned(self, record: str) -> None:
         self.success.append(record)
         logger.info(f"Scanned [{record}]")
 
-    def filter(self, record: str, err: str) -> None:
-        self.filtered.append(record)
-        logger.warning(f"Filtered [{record}] due to {err}")
+    def filter(self, key: str, reason: str) -> None:
+        logger.warning(f"Filtered [{key}] due to {reason}")
+        self.filtered.append({key: reason})
 
 
-class DatabaseServiceSource(DBTMixin, TopologyRunnerMixin, Source, ABC):
+class DatabaseServiceSource(
+    DBTMixin, TopologyRunnerMixin, Source, ABC
+):  # pylint: disable=too-many-public-methods
     """
     Base class for Database Services.
     It implements the topology and context.
@@ -220,7 +226,7 @@ class DatabaseServiceSource(DBTMixin, TopologyRunnerMixin, Source, ABC):
     source_config: DatabaseServiceMetadataPipeline
     config: WorkflowSource
     metadata: OpenMetadata
-    database_source_state: Set
+    database_source_state: Set = set()
     # Big union of types we want to fetch dynamically
     service_connection: DatabaseConnection.__fields__["config"].type_
 
@@ -235,13 +241,16 @@ class DatabaseServiceSource(DBTMixin, TopologyRunnerMixin, Source, ABC):
     dbt_tests = {}
 
     def __init__(self):
-        if hasattr(self.source_config.dbtConfigSource, "dbtSecurityConfig"):
-            if self.source_config.dbtConfigSource.dbtSecurityConfig is None:
-                logger.info("dbtConfigSource is not configured")
-                self.dbt_catalog = None
-                self.dbt_manifest = None
-                self.dbt_run_results = None
-                self.data_models = {}
+
+        if (
+            hasattr(self.source_config.dbtConfigSource, "dbtSecurityConfig")
+            and self.source_config.dbtConfigSource.dbtSecurityConfig is None
+        ):
+            logger.info("dbtConfigSource is not configured")
+            self.dbt_catalog = None
+            self.dbt_manifest = None
+            self.dbt_run_results = None
+            self.data_models = {}
         else:
             dbt_details = get_dbt_details(self.source_config.dbtConfigSource)
             if dbt_details:
@@ -346,7 +355,8 @@ class DatabaseServiceSource(DBTMixin, TopologyRunnerMixin, Source, ABC):
         """
 
     def yield_location(
-        self, table_name_and_type: Tuple[str, TableType]
+        self,
+        table_name_and_type: Tuple[str, TableType],  # pylint: disable=unused-argument
     ) -> Iterable[CreateLocationRequest]:
         """
         From topology.
@@ -379,15 +389,39 @@ class DatabaseServiceSource(DBTMixin, TopologyRunnerMixin, Source, ABC):
             schema_name=self.context.database_schema.name.__root__,
             table_name=table_name,
         )
+
         datamodel = self.get_data_model(table_fqn)
+
+        dbt_tag_labels = None
         if datamodel:
+            logger.info("Processing DBT Tags")
+            dbt_tag_labels = datamodel.tags
+            if not dbt_tag_labels:
+                dbt_tag_labels = []
+            for column in datamodel.columns:
+                if column.tags:
+                    dbt_tag_labels.extend(column.tags)
+            if dbt_tag_labels:
+                for tag_label in dbt_tag_labels:
+                    yield OMetaTagAndCategory(
+                        category_name=CreateTagCategoryRequest(
+                            name="DBTTags",
+                            description="",
+                            categoryType="Classification",
+                        ),
+                        category_details=CreateTagRequest(
+                            name=tag_label.tagFQN.__root__.split(".")[1],
+                            description="DBT Tags",
+                        ),
+                    )
             yield DataModelLink(
                 fqn=table_fqn,
                 datamodel=datamodel,
             )
 
     def yield_table_location_link(
-        self, table_name_and_type: Tuple[str, TableType]
+        self,
+        table_name_and_type: Tuple[str, TableType],  # pylint: disable=unused-argument
     ) -> Iterable[TableLocationLink]:
         """
         Gets the current location being processed, fetches its data model

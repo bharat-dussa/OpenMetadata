@@ -9,12 +9,14 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+"""Athena source module"""
+
 from typing import Iterable, Optional, Tuple
 
 from pyathena.sqlalchemy_athena import AthenaDialect
 from sqlalchemy import types
 
-from metadata.generated.schema.entity.data.table import TableType
+from metadata.generated.schema.entity.data.table import Table, TableType
 from metadata.generated.schema.entity.services.connections.database.athenaConnection import (
     AthenaConnection,
 )
@@ -27,6 +29,7 @@ from metadata.generated.schema.metadataIngestion.workflow import (
 from metadata.ingestion.api.source import InvalidSourceException
 from metadata.ingestion.source import sqa_types
 from metadata.ingestion.source.database.common_db_source import CommonDbSourceService
+from metadata.utils import fqn
 from metadata.utils.filters import filter_by_table
 from metadata.utils.logger import ingestion_logger
 
@@ -38,7 +41,7 @@ def _get_column_type(self, type_):
     Function overwritten from AthenaDialect
     to add custom SQA typing.
     """
-    match = self._pattern_column_type.match(type_)
+    match = self._pattern_column_type.match(type_)  # pylint: disable=protected-access
     if match:
         name = match.group(1).lower()
         length = match.group(2)
@@ -47,15 +50,28 @@ def _get_column_type(self, type_):
         length = None
 
     args = []
-    if name in ["boolean"]:
-        col_type = types.BOOLEAN
-    elif name in ["float", "double", "real"]:
-        col_type = types.FLOAT
-    elif name in ["tinyint", "smallint", "integer", "int"]:
-        col_type = types.INTEGER
-    elif name in ["bigint"]:
-        col_type = types.BIGINT
-    elif name in ["decimal"]:
+    col_map = {
+        "boolean": types.BOOLEAN,
+        "float": types.FLOAT,
+        "double": types.FLOAT,
+        "real": types.FLOAT,
+        "tinyint": types.INTEGER,
+        "smallint": types.INTEGER,
+        "integer": types.INTEGER,
+        "int": types.INTEGER,
+        "bigint": types.BIGINT,
+        "string": types.String,
+        "date": types.DATE,
+        "timestamp": types.TIMESTAMP,
+        "binary": types.BINARY,
+        "varbinary": types.BINARY,
+        "array": types.ARRAY,
+        "json": types.JSON,
+        "struct": sqa_types.SQAStruct,
+        "row": sqa_types.SQAStruct,
+        "map": sqa_types.SQAMap,
+    }
+    if name in ["decimal"]:
         col_type = types.DECIMAL
         if length:
             precision, scale = length.split(",")
@@ -68,34 +84,22 @@ def _get_column_type(self, type_):
         col_type = types.VARCHAR
         if length:
             args = [int(length)]
-    elif name in ["string"]:
-        col_type = types.String
-    elif name in ["date"]:
-        col_type = types.DATE
-    elif name in ["timestamp"]:
-        col_type = types.TIMESTAMP
-    elif name in ["binary", "varbinary"]:
-        col_type = types.BINARY
-    elif name in ["array"]:
-        col_type = types.ARRAY
-    elif name in ["json"]:
-        col_type = types.JSON
-    elif name in ["struct", "row"]:
-        col_type = sqa_types.SQAStruct
-    elif name in ["map"]:
-        col_type = sqa_types.SQAMap
+    elif col_map.get(name):
+        col_type = col_map.get(name)
     else:
         logger.warning(f"Did not recognize type '{type_}'")
         col_type = types.NullType
     return col_type(*args)
 
 
-AthenaDialect._get_column_type = _get_column_type
+AthenaDialect._get_column_type = _get_column_type  # pylint: disable=protected-access
 
 
 class AthenaSource(CommonDbSourceService):
-    def __init__(self, config, metadata_config):
-        super().__init__(config, metadata_config)
+    """
+    Implements the necessary methods to extract
+    Database metadata from Athena Source
+    """
 
     @classmethod
     def create(cls, config_dict, metadata_config: OpenMetadataConnection):
@@ -119,12 +123,21 @@ class AthenaSource(CommonDbSourceService):
         schema_name = self.context.database_schema.name.__root__
         if self.source_config.includeTables:
             for table_name in self.inspector.get_table_names(schema_name):
+                table_fqn = fqn.build(
+                    self.metadata,
+                    entity_type=Table,
+                    service_name=self.context.database_service.name.__root__,
+                    database_name=self.context.database.name.__root__,
+                    schema_name=self.context.database_schema.name.__root__,
+                    table_name=table_name,
+                )
                 if filter_by_table(
-                    self.source_config.tableFilterPattern, table_name=table_name
+                    self.source_config.tableFilterPattern,
+                    table_fqn if self.source_config.useFqnForFiltering else table_name,
                 ):
                     self.status.filter(
-                        f"{self.config.serviceName}.{table_name}",
-                        "Table pattern not allowed",
+                        table_fqn,
+                        "Table Filtered Out",
                     )
                     continue
 
@@ -132,12 +145,21 @@ class AthenaSource(CommonDbSourceService):
 
         if self.source_config.includeViews:
             for view_name in self.inspector.get_view_names(schema_name):
+                view_fqn = fqn.build(
+                    self.metadata,
+                    entity_type=Table,
+                    service_name=self.context.database_service.name.__root__,
+                    database_name=self.context.database.name.__root__,
+                    schema_name=self.context.database_schema.name.__root__,
+                    table_name=view_name,
+                )
                 if filter_by_table(
-                    self.source_config.tableFilterPattern, table_name=view_name
+                    self.source_config.tableFilterPattern,
+                    view_fqn if self.source_config.useFqnForFiltering else view_name,
                 ):
                     self.status.filter(
-                        f"{self.config.serviceName}.{view_name}",
-                        "Table pattern not allowed for view",
+                        view_fqn,
+                        "Table Filtered Out",
                     )
                     continue
 

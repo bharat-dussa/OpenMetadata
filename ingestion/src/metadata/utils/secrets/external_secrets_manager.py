@@ -29,7 +29,8 @@ from metadata.generated.schema.metadataIngestion.workflow import SourceConfig
 from metadata.utils.logger import utils_logger
 from metadata.utils.secrets.secrets_manager import (
     AUTH_PROVIDER_MAPPING,
-    AUTH_PROVIDER_SECRET_PREFIX,
+    AUTH_PROVIDER_PREFIX,
+    BOT_PREFIX,
     DBT_SOURCE_CONFIG_SECRET_PREFIX,
     TEST_CONNECTION_TEMP_SECRET_PREFIX,
     SecretsManager,
@@ -43,6 +44,10 @@ NULL_VALUE = "null"
 
 
 class ExternalSecretsManager(SecretsManager, ABC):
+    """
+    Abstract class for third party secrets' manager implementations
+    """
+
     def __init__(
         self,
         cluster_prefix: str,
@@ -80,26 +85,37 @@ class ExternalSecretsManager(SecretsManager, ABC):
         )
         return ServiceConnection(__root__=service_connection)
 
-    def add_auth_provider_security_config(self, config: OpenMetadataConnection) -> None:
+    def add_auth_provider_security_config(
+        self, config: OpenMetadataConnection, bot_name: str
+    ) -> None:
         """
         Add the auth provider security config from the AWS client store to a given OpenMetadata connection object.
         :param config: OpenMetadataConnection object
+        :param bot_name: Bot name to retrieve credentials from
         """
         logger.debug(
             f"Adding auth provider security config using {self.provider} secrets' manager"
         )
-        if config.authProvider != AuthProvider.no_auth:
-            secret_id = self.build_secret_id(
-                AUTH_PROVIDER_SECRET_PREFIX, config.authProvider.value.lower()
+
+        if (
+            config.authProvider != AuthProvider.no_auth
+            and config.securityConfig is None
+        ):
+            auth_provider_secret_id = self.build_secret_id(
+                BOT_PREFIX, bot_name, AUTH_PROVIDER_PREFIX
             )
+            auth_provider_secret = self.get_string_value(auth_provider_secret_id)
+            config.authProvider = AuthProvider(json.loads(auth_provider_secret))
+            secret_id = self.build_secret_id(BOT_PREFIX, bot_name)
             auth_config_json = self.get_string_value(secret_id)
             try:
+                config_object = json.loads(auth_config_json)
                 config.securityConfig = AUTH_PROVIDER_MAPPING.get(
                     config.authProvider
-                ).parse_obj(json.loads(auth_config_json))
+                ).parse_obj(config_object)
             except KeyError as err:
                 msg = f"No client implemented for auth provider [{config.authProvider}]: {err}"
-                raise NotImplementedError(msg)
+                raise NotImplementedError(msg) from err
 
     def retrieve_dbt_source_config(
         self, source_config: SourceConfig, pipeline_name: str
