@@ -1,7 +1,36 @@
-import { Table } from 'antd';
-import React from 'react';
+import { Space, Table } from 'antd';
+import React, { useMemo } from 'react';
+import {
+  PipelineStatus,
+  StatusType,
+} from '../../../generated/entity/data/pipeline';
+import { getStatusBadgeIcon } from '../../../utils/PipelineDetailsUtils';
+import SVGIcons from '../../../utils/SvgUtils';
+import { getTableViewData, ViewDataInterface } from './list-view-tab.util';
 
-const ListView = () => {
+interface ListViewProps {
+  executions: Array<PipelineStatus> | undefined;
+}
+
+interface StatusIndicator {
+  status: StatusType;
+}
+const StatusIndicator = ({ status }: StatusIndicator) => (
+  <Space>
+    <SVGIcons
+      alt="result"
+      className="tw-w-4"
+      icon={getStatusBadgeIcon(status)}
+    />
+    <p>
+      {status === StatusType.Successful ? 'Success' : ''}
+      {status === StatusType.Failed ? 'Failed' : ''}
+      {status === StatusType.Pending ? 'Pending' : ''}
+    </p>
+  </Space>
+);
+
+const ListView = ({ executions }: ListViewProps) => {
   const columns = [
     {
       title: 'Name',
@@ -17,50 +46,24 @@ const ListView = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      render: (_: unknown, data: ViewDataInterface) => (
+        <StatusIndicator status={data.status} />
+      ),
     },
     {
       title: 'Date & Time',
-      dataIndex: 'dataAndTime',
-      key: 'dataAndTime',
+      dataIndex: 'timeStamp',
+      key: 'timeStamp',
     },
   ];
 
-  const data = [
-    {
-      key: 'name',
-      name: 'John Brown',
-      type: 32,
-      status: 'New York No. 1 Lake Park',
-      dataAndTime: ['nice', 'developer'],
-    },
-    {
-      key: 'type',
-      name: 'John Brown',
-      type: 32,
-      status: 'New York No. 1 Lake Park',
-      dataAndTime: ['nice', 'developer'],
-    },
-    {
-      key: 'status',
-      name: 'John Brown',
-      type: 32,
-      status: 'New York No. 1 Lake Park',
-      dataAndTime: ['nice', 'developer'],
-    },
-    {
-      key: 'dataAndTime',
-      name: 'John Brown',
-      type: 32,
-      status: 'New York No. 1 Lake Park',
-      dataAndTime: ['nice', 'developer'],
-    },
-  ];
+  const tableData = useMemo(() => getTableViewData(executions), [executions]);
 
   return (
     <div>
       <Table
         columns={columns}
-        dataSource={data}
+        dataSource={tableData}
         pagination={false}
         size="small"
       />

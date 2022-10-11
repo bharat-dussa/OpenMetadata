@@ -521,8 +521,8 @@ const PipelineDetails = ({
                 </div>
               )}
               {activeTab === 3 && (
-                <div className="w-full">
-                  <Execution />
+                <div className="w-full h-full">
+                  <Execution pipelineFQN={pipelineFQN} />
                 </div>
               )}
               {activeTab === 4 && (
