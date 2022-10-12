@@ -24,9 +24,14 @@ import React, {
 } from 'react';
 import Select, { SingleValue } from 'react-select';
 import { getPipelineStatus } from '../../axiosAPIs/pipelineAPI';
+import { PROFILER_FILTER_RANGE } from '../../constants/profiler.constant';
 import { Pipeline, PipelineStatus } from '../../generated/entity/data/pipeline';
 import jsonData from '../../jsons/en';
 import { STATUS_OPTIONS } from '../../utils/PipelineDetailsUtils';
+import {
+  getDateToMilliSecondsOfCurrentDate,
+  getPastDatesToMilliSecondsFromCurrentDate,
+} from '../../utils/TimeUtils';
 import { showErrorToast } from '../../utils/ToastUtils';
 import { reactSingleSelectCustomStyle } from '../common/react-select-component/reactSelectCustomStyle';
 import ExecutionStrip from '../ExecutionStrip/ExecutionStrip';
@@ -73,13 +78,11 @@ const PipelineStatusList: FC<Prop> = ({
 
   const fetchPipelineStatus = async () => {
     try {
-      //   const startTs = getPastDatesToMilliSecondsFromCurrentDate(
-      //     PROFILER_FILTER_RANGE.last60days.days
-      //   );
+      const startTs = getPastDatesToMilliSecondsFromCurrentDate(
+        PROFILER_FILTER_RANGE.last60days.days
+      );
 
-      //   const endTs = getDateToMilliSecondsOfCurrentDate();
-      const startTs = 164099520000;
-      const endTs = 166393890300;
+      const endTs = getDateToMilliSecondsOfCurrentDate();
 
       const response = await getPipelineStatus(pipelineFQN, {
         startTs,
