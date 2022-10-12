@@ -62,7 +62,7 @@ const Execution = ({ pipelineFQN }: ExecutionProps) => {
   const fetchPipelineStatus = async () => {
     try {
       const startTs = getPastDatesToMilliSecondsFromCurrentDate(
-        PROFILER_FILTER_RANGE.last60days.days
+        PROFILER_FILTER_RANGE.last365days.days
       );
 
       const endTs = getDateToMilliSecondsOfCurrentDate();
