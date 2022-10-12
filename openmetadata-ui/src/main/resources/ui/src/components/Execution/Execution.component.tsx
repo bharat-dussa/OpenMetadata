@@ -2,8 +2,10 @@ import {
   Button,
   Card,
   Col,
+  DatePicker,
   Dropdown,
   Menu,
+  MenuProps,
   Radio,
   RadioChangeEvent,
   Row,
@@ -11,12 +13,25 @@ import {
   Typography,
 } from 'antd';
 import { AxiosError } from 'axios';
+import classNames from 'classnames';
+import { isNil, toNumber } from 'lodash';
+import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { ReactComponent as Calendar } from '../../assets/svg/calendar.svg';
 import { ReactComponent as FilterIcon } from '../../assets/svg/filter.svg';
 import { getPipelineStatus } from '../../axiosAPIs/pipelineAPI';
-import { PipelineStatus } from '../../generated/entity/data/pipeline';
+import { MenuOptions } from '../../constants/execution.constants';
+import { PROFILER_FILTER_RANGE } from '../../constants/profiler.constant';
+import {
+  PipelineStatus,
+  StatusType,
+} from '../../generated/entity/data/pipeline';
 import jsonData from '../../jsons/en';
+import { getStatusLabel } from '../../utils/executionUtils';
+import {
+  getDateToMilliSecondsOfCurrentDate,
+  getPastDatesToMilliSecondsFromCurrentDate,
+} from '../../utils/TimeUtils';
 import { showErrorToast } from '../../utils/ToastUtils';
 import './Execution.style.less';
 import ListView from './ListView/list-view-tab.component';
@@ -39,11 +54,18 @@ interface SummaryCardContentProps {
 const Execution = ({ pipelineFQN }: ExecutionProps) => {
   const [view, setView] = useState(viewTypes.listView);
   const [executions, setExecutions] = useState<Array<PipelineStatus>>();
+  const [datesSelected, setDatesSelected] = useState<string[]>();
+
+  const [isLabelVisible, setIsLabelVisible] = useState<boolean>(false);
+  const [status, setStatus] = useState(MenuOptions.all);
 
   const fetchPipelineStatus = async () => {
     try {
-      const startTs = 164099520000;
-      const endTs = 166393890300;
+      const startTs = getPastDatesToMilliSecondsFromCurrentDate(
+        PROFILER_FILTER_RANGE.last60days.days
+      );
+
+      const endTs = getDateToMilliSecondsOfCurrentDate();
 
       const response = await getPipelineStatus(pipelineFQN, {
         startTs,
@@ -66,25 +88,46 @@ const Execution = ({ pipelineFQN }: ExecutionProps) => {
     setView(e.target.value);
   };
 
+  const handleMenuClick: MenuProps['onClick'] = (event) => {
+    if (event?.key) {
+      const key = toNumber(event.key);
+      if (key === 1) {
+        return setStatus(StatusType.Successful);
+      }
+      if (key === 2) {
+        return setStatus(StatusType.Failed);
+      }
+      if (key === 3) {
+        return setStatus(StatusType.Pending);
+      }
+    }
+
+    return setStatus(MenuOptions.all);
+  };
+
   const menu = (
     <Menu
       items={[
         {
-          key: '1',
-          label: 'Success',
+          key: 0,
+          label: MenuOptions.all,
         },
         {
-          key: '2',
-          label: 'Failure',
+          key: 1,
+          label: MenuOptions[StatusType.Successful],
         },
         {
-          key: '3',
-          label: 'Aborted',
+          key: 2,
+          label: MenuOptions[StatusType.Failed],
+        },
+        {
+          key: 3,
+          label: MenuOptions[StatusType.Pending],
         },
       ]}
+      onClick={handleMenuClick}
     />
   );
-
   const SummaryCardContent = ({
     heading,
     name,
@@ -104,58 +147,112 @@ const Execution = ({ pipelineFQN }: ExecutionProps) => {
     </Space>
   );
 
-  return executions && executions.length === 0 ? (
+  return executions && executions.length > 0 ? (
     <Row className="h-full" gutter={16}>
-      <Col flex="1 1 200px">
-        <Row justify="space-between">
-          <Col>
-            <Radio.Group
-              buttonStyle="outline"
-              style={{ marginBottom: 8 }}
-              value={view}
-              onChange={handleModeChange}>
-              <Radio.Button value={viewTypes.listView}>
-                {viewTypes.listView}
-              </Radio.Button>
-              <Radio.Button value={viewTypes.treeView}>
-                {viewTypes.treeView}
-              </Radio.Button>
-            </Radio.Group>
-          </Col>
-          <Col>
-            <Space
-              style={{
-                width: '100%',
-              }}>
-              <Dropdown overlay={menu} placement="bottom">
-                <Button ghost type="primary">
-                  <Space>
-                    <FilterIcon />
-                    <p>Status</p>
-                  </Space>
-                </Button>
-              </Dropdown>
-              {view === viewTypes.listView ? (
-                <Button ghost type="primary">
-                  <Space>
-                    <Calendar />
-                    <p>Date Filter</p>
-                  </Space>
-                </Button>
-              ) : null}
-            </Space>
-          </Col>
-        </Row>
-        {view === viewTypes.listView ? (
-          <div className="mt-1">
-            <ListView executions={executions} />
-          </div>
-        ) : null}
-        {view === viewTypes.treeView ? (
-          <div className="mt-1">
-            <TreeViewTab />
-          </div>
-        ) : null}
+      <Col className="" flex="1 1 200px">
+        <div className="p-y-md p-l-lg p-b-lg">
+          <Row justify="space-between">
+            <Col>
+              <Radio.Group
+                buttonStyle="outline"
+                style={{ marginBottom: 8 }}
+                value={view}
+                onChange={handleModeChange}>
+                <Radio.Button value={viewTypes.listView}>
+                  {viewTypes.listView}
+                </Radio.Button>
+                <Radio.Button value={viewTypes.treeView}>
+                  {viewTypes.treeView}
+                </Radio.Button>
+              </Radio.Group>
+            </Col>
+            <Col>
+              <Space className="w-full">
+                <Dropdown overlay={menu} placement="bottom">
+                  <Button ghost type="primary">
+                    <Space>
+                      <FilterIcon />
+                      <p>
+                        {status === MenuOptions.all
+                          ? 'Status'
+                          : getStatusLabel(status)}
+                      </p>
+                    </Space>
+                  </Button>
+                </Dropdown>
+                {view === viewTypes.listView ? (
+                  <>
+                    <Button
+                      ghost
+                      className={classNames(
+                        'range-picker-button delay-100',
+                        isNil(datesSelected)
+                          ? 'range-picker-button-width delay-100'
+                          : ''
+                      )}
+                      type="primary">
+                      <Space>
+                        <Calendar />
+                        {!isLabelVisible || isNil(datesSelected) ? (
+                          <label> Date Filter</label>
+                        ) : null}
+                        <DatePicker.RangePicker
+                          showNow
+                          bordered={false}
+                          className={classNames('range-picker')}
+                          getPopupContainer={(trigger) => {
+                            setIsLabelVisible(Boolean(trigger));
+
+                            return trigger;
+                          }}
+                          placeholder={['', '']}
+                          ranges={{
+                            Today: [moment(), moment()],
+                            'This Month': [
+                              moment().startOf('month'),
+                              moment().endOf('month'),
+                            ],
+                            'Last 3 months': [
+                              moment().subtract(3, 'months'),
+                              moment(),
+                            ],
+                            'Last 6 months': [
+                              moment().subtract(6, 'months'),
+                              moment(),
+                            ],
+                            'Last 1 year': [
+                              moment().subtract(12, 'months'),
+                              moment(),
+                            ],
+                            "Last 5 year's": [
+                              moment().subtract(5, 'year'),
+                              moment(),
+                            ],
+                          }}
+                          suffixIcon={null}
+                          onChange={(_dates, dateStrings) => {
+                            setDatesSelected(dateStrings);
+                          }}
+                        />
+                      </Space>
+                    </Button>
+                  </>
+                ) : null}
+              </Space>
+            </Col>
+          </Row>
+
+          {view === viewTypes.listView ? (
+            <div className="mt-1">
+              <ListView executions={executions} status={status} />
+            </div>
+          ) : null}
+          {view === viewTypes.treeView ? (
+            <div className="mt-1">
+              <TreeViewTab executions={executions} status={status} />
+            </div>
+          ) : null}
+        </div>
       </Col>
       <Col flex="0 1 400px">
         <Card className="h-full">

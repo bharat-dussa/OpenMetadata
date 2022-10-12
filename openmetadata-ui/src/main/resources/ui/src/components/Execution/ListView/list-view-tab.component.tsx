@@ -1,36 +1,26 @@
-import { Space, Table } from 'antd';
+import { Table } from 'antd';
 import React, { useMemo } from 'react';
 import {
   PipelineStatus,
   StatusType,
 } from '../../../generated/entity/data/pipeline';
-import { getStatusBadgeIcon } from '../../../utils/PipelineDetailsUtils';
-import SVGIcons from '../../../utils/SvgUtils';
-import { getTableViewData, ViewDataInterface } from './list-view-tab.util';
+import {
+  getTableViewData,
+  StatusIndicator,
+  ViewDataInterface,
+} from '../../../utils/executionUtils';
 
 interface ListViewProps {
   executions: Array<PipelineStatus> | undefined;
+  status: string;
 }
 
-interface StatusIndicator {
-  status: StatusType;
-}
-const StatusIndicator = ({ status }: StatusIndicator) => (
-  <Space>
-    <SVGIcons
-      alt="result"
-      className="tw-w-4"
-      icon={getStatusBadgeIcon(status)}
-    />
-    <p>
-      {status === StatusType.Successful ? 'Success' : ''}
-      {status === StatusType.Failed ? 'Failed' : ''}
-      {status === StatusType.Pending ? 'Pending' : ''}
-    </p>
-  </Space>
-);
+const ListView = ({ executions, status }: ListViewProps) => {
+  const tableData = useMemo(
+    () => getTableViewData(executions, status),
+    [executions, status]
+  );
 
-const ListView = ({ executions }: ListViewProps) => {
   const columns = [
     {
       title: 'Name',
@@ -47,26 +37,19 @@ const ListView = ({ executions }: ListViewProps) => {
       dataIndex: 'status',
       key: 'status',
       render: (_: unknown, data: ViewDataInterface) => (
-        <StatusIndicator status={data.status} />
+        <StatusIndicator status={data.status as StatusType} />
       ),
     },
     {
       title: 'Date & Time',
-      dataIndex: 'timeStamp',
-      key: 'timeStamp',
+      dataIndex: 'timestamp',
+      key: 'timestamp',
     },
   ];
 
-  const tableData = useMemo(() => getTableViewData(executions), [executions]);
-
   return (
     <div>
-      <Table
-        columns={columns}
-        dataSource={tableData}
-        pagination={false}
-        size="small"
-      />
+      <Table columns={columns} dataSource={tableData} pagination={false} />
     </div>
   );
 };

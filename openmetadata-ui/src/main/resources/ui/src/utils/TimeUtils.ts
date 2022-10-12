@@ -294,3 +294,14 @@ export const getFormattedDateFromSeconds = (
   timeStamp: number,
   format?: string
 ) => DateTime.fromSeconds(timeStamp || 0).toFormat(format || 'dd/MMM HH:mm');
+
+/**
+ * It takes a timestamp and returns a string in the format of "dd MMM yyyy, hh:mm"
+ * @param {number} timeStamp - number - The timestamp you want to convert to a date.
+ * @returns A string ex: 23 May 2022, 23:59
+ */
+export const getDateTimeByTimeStampWithCommaSeparated = (
+  timeStamp: number
+): string => {
+  return `${DateTime.fromMillis(timeStamp).toFormat('dd MMM yyyy, hh:mm')}`;
+};

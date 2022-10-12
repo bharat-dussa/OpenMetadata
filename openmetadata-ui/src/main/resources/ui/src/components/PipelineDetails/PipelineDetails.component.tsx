@@ -438,7 +438,7 @@ const PipelineDetails = ({
           />
 
           <div className="tw-flex-grow tw-flex tw-flex-col tw--mx-6 tw-px-7 tw-py-4">
-            <div className="tw-flex-grow tw-flex tw-flex-col tw-bg-white tw-p-4 tw-shadow tw-rounded-md tw-w-full">
+            <div className="tw-flex-grow tw-flex tw-flex-col tw-bg-white tw-shadow tw-rounded-md tw-w-full">
               {activeTab === 1 && (
                 <>
                   <div className="tw-grid tw-grid-cols-4 tw-gap-4 tw-w-full">
