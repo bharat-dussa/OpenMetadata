@@ -322,3 +322,18 @@ export const getDateTimeByTimeStampWithCommaSeparated = (
  * @param {string} date - The date you want to convert to a timestamp.
  */
 export const getTimeStampByDate = (date: string) => Date.parse(date);
+
+/**
+ * It returns the current date in milliseconds
+ */
+export const getDateToMilliSecondsOfCurrentDate = () =>
+  DateTime.now().toMillis();
+
+/**
+ * It returns the number of milliseconds from the current date to the past date
+ * @param {number} pastDayCount - number - The number of days you want to go back from the current
+ * date.
+ */
+export const getPastDatesToMilliSecondsFromCurrentDate = (
+  pastDayCount: number
+) => DateTime.now().minus({ days: pastDayCount }).toMillis();
