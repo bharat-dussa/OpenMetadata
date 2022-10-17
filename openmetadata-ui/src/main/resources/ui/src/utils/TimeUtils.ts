@@ -182,6 +182,19 @@ export const getDateTimeByTimeStamp = (
 };
 
 /**
+ * It takes a timestamp and returns a formatted date string
+ * @param {number} timeStamp - The timestamp you want to convert to a date.
+ * @param {string} [format] - The format of the date you want to return.
+ * @returns A string
+ */
+export const getDateByTimeStamp = (
+  timeStamp: number,
+  format?: string
+): string => {
+  return DateTime.fromMillis(timeStamp).toFormat(format || 'dd MMM yyyy');
+};
+
+/**
  * It takes a timestamp and returns a relative date time string
  * @param {number} timestamp - number - The timestamp to convert to a relative date time.
  */
@@ -292,3 +305,35 @@ export const getFormattedDateFromSeconds = (
   timeStamp: number,
   format?: string
 ) => DateTime.fromSeconds(timeStamp || 0).toFormat(format || 'dd/MMM HH:mm');
+
+/**
+ * It takes a timestamp and returns a string in the format of "dd MMM yyyy, hh:mm"
+ * @param {number} timeStamp - number - The timestamp you want to convert to a date.
+ * @returns A string ex: 23 May 2022, 23:59
+ */
+export const getDateTimeByTimeStampWithCommaSeparated = (
+  timeStamp: number
+): string => {
+  return `${DateTime.fromMillis(timeStamp).toFormat('dd MMM yyyy, hh:mm')}`;
+};
+
+/**
+ * Given a date string, return the time stamp of that date.
+ * @param {string} date - The date you want to convert to a timestamp.
+ */
+export const getTimeStampByDate = (date: string) => Date.parse(date);
+
+/**
+ * It returns the current date in milliseconds
+ */
+export const getDateToMilliSecondsOfCurrentDate = () =>
+  DateTime.now().toMillis();
+
+/**
+ * It returns the number of milliseconds from the current date to the past date
+ * @param {number} pastDayCount - number - The number of days you want to go back from the current
+ * date.
+ */
+export const getPastDatesToMilliSecondsFromCurrentDate = (
+  pastDayCount: number
+) => DateTime.now().minus({ days: pastDayCount }).toMillis();
