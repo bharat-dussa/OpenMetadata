@@ -23,14 +23,15 @@ import { DeleteConfirmationModalProp } from './DeleteConfirmationModal.interface
 const DeleteConfirmationModal: FC<DeleteConfirmationModalProp> = ({
   onDiscard,
   onDelete,
+  visible,
 }) => {
   return (
     <ConfirmationModal
-      visible
       bodyText={confirmationBodyText}
       cancelText={t('label.cancel')}
       confirmText={t('label.delete')}
       header={confirmHeadertext}
+      visible={visible}
       onCancel={onDiscard}
       onConfirm={onDelete}
     />

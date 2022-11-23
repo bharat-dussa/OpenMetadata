@@ -32,6 +32,7 @@ jest.mock('../../Modals/ConfirmationModal/ConfirmationModal', () => {
 const mockProp = {
   onDiscard: jest.fn(),
   onDelete: jest.fn(),
+  visible: true,
 };
 
 describe('Test Delete Confirmation Modal Component', () => {
