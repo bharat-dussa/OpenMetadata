@@ -11,17 +11,14 @@
  *  limitations under the License.
  */
 
+import { t } from 'i18next';
 import React, { FC } from 'react';
 import {
   confirmationBodyText,
   confirmHeadertext,
 } from '../../../constants/feed.constants';
 import ConfirmationModal from '../../Modals/ConfirmationModal/ConfirmationModal';
-
-interface DeleteConfirmationModalProp {
-  onDiscard: () => void;
-  onDelete: () => void;
-}
+import { DeleteConfirmationModalProp } from './DeleteConfirmationModal.interface';
 
 const DeleteConfirmationModal: FC<DeleteConfirmationModalProp> = ({
   onDiscard,
@@ -29,11 +26,10 @@ const DeleteConfirmationModal: FC<DeleteConfirmationModalProp> = ({
 }) => {
   return (
     <ConfirmationModal
-      bodyClassName="tw-h-18"
+      visible
       bodyText={confirmationBodyText}
-      cancelText="Cancel"
-      className="tw-w-auto tw-h-screen"
-      confirmText="Delete"
+      cancelText={t('label.cancel')}
+      confirmText={t('label.delete')}
       header={confirmHeadertext}
       onCancel={onDiscard}
       onConfirm={onDelete}
