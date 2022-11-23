@@ -320,7 +320,11 @@
     "teams": "Teams",
     "pctile-lowercase": "pctile",
     "delete-property": "Delete property {{propertyName}}",
-    "delete-tag": "Delete Tag {{isCategory}}"
+    "delete-tag": "Delete Tag {{isCategory}}",
+    "search-for-user": "Search for user",
+    "no-user-available": "No user available",
+    "add-reviewer": "Add Reviewer",
+    "add-reviewers": "Add Reviewers"
   },
   "message": {
     "service-email-required": "Service account Email is required",
