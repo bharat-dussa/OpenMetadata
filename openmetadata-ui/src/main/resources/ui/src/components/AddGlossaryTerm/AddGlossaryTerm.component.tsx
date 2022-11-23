@@ -518,14 +518,13 @@ const AddGlossaryTerm = ({
           </Field>
         </div>
 
-        {showRelatedTermsModal && (
-          <RelatedTermsModal
-            header="Add Related Terms"
-            relatedTerms={relatedTerms}
-            onCancel={onRelatedTermsModalCancel}
-            onSave={handleRelatedTermsSave}
-          />
-        )}
+        <RelatedTermsModal
+          header={t('label.add-related-terms')}
+          relatedTerms={relatedTerms}
+          visible={showRelatedTermsModal}
+          onCancel={onRelatedTermsModalCancel}
+          onSave={handleRelatedTermsSave}
+        />
 
         <ReviewerModal
           header={t('label.add-reviewers')}
