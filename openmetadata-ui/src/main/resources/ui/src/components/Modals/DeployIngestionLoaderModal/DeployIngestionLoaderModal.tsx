@@ -11,6 +11,7 @@
  *  limitations under the License.
  */
 
+import { Typography } from 'antd';
 import Modal from 'antd/lib/modal/Modal';
 import classNames from 'classnames';
 import React, { Fragment } from 'react';
@@ -43,7 +44,7 @@ const DeployIngestionLoaderModal = ({
       <div className="p-y-lg" data-testid="body-text">
         <div className={classNames('ingestion-content relative', className)}>
           <Fragment>
-            <span
+            <Typography.Text
               className={classNames('ingestion-deploy-line')}
               style={{
                 background: `linear-gradient(to right, ${PRIMERY_COLOR} ${progress}%, ${LITE_GRAY_COLOR} ${progress}%)`,
@@ -51,33 +52,35 @@ const DeployIngestionLoaderModal = ({
             />
 
             <div className="ingestion-wrappe absolute" style={{ left: '16%' }}>
-              <span
+              <Typography.Text
                 className={classNames('ingestion-deploy-rounder self-center')}
                 style={{
                   background: isActive(isIngestionCreated),
                 }}>
-                <span className="flex-center h-full">
+                <Typography.Text className="flex-center h-full">
                   <SVGIcons alt="" icon={Icons.CREATE_INGESTION} />
-                </span>
-              </span>
+                </Typography.Text>
+              </Typography.Text>
             </div>
             <div className="ingestion-wrapper absolute" style={{ left: '72%' }}>
-              <span
+              <Typography.Text
                 className={classNames('ingestion-deploy-rounder self-center')}
                 style={{
                   background: isActive(isDeployed),
                 }}>
-                <span className="flex-center h-full">
+                <Typography.Text className="flex-center h-full">
                   <SVGIcons alt="" icon={Icons.DEPLOY_INGESTION} />
-                </span>
-              </span>
+                </Typography.Text>
+              </Typography.Text>
             </div>
           </Fragment>
         </div>
-        <p className="text-center mt-24">
+        <Typography.Text className="text-center mt-24">
           {action}
-          <span className="font-semibold m-l-xss">“{ingestionName}”</span>
-        </p>
+          <Typography.Text className="font-semibold m-l-xss">
+            “{ingestionName}”
+          </Typography.Text>
+        </Typography.Text>
       </div>
     </Modal>
   );
