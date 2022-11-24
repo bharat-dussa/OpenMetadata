@@ -46,77 +46,73 @@ const EntityDeleteModal: FC<EntityDeleteModalProp> = ({
   );
 
   return (
-    <>
-      <Modal
-        centered
-        destroyOnClose
-        className={className}
-        closable={false}
-        data-testid="delete-confirmation-modal"
-        footer={
-          <div data-testid="delete-confirmation-modal-footer">
-            <Button
-              className={classNames('mr-2')}
-              data-testid="discard-button"
-              disabled={isLoadingWaiting}
-              type="text"
-              onClick={onCancel}>
-              {t('label.cancel')}
-            </Button>
-            <Button
-              data-testid={
-                isLoadingWaiting ? 'loading-button' : 'confirm-button'
-              }
-              disabled={!isNameMatching()}
-              loading={isLoadingWaiting}
-              type="primary"
-              onClick={onConfirm}>
-              {t('label.confirm')}
-            </Button>
-          </div>
-        }
-        title={
-          <Typography.Text data-testid="modal-header">
-            {softDelete ? (
-              <span>
-                {t('label.soft-delete')} <strong>{entityName}</strong>
-              </span>
-            ) : (
-              <span>
-                {t('label.delete')} <strong>{entityName}</strong>
-              </span>
-            )}
-          </Typography.Text>
-        }
-        visible={visible}
-        width={600}>
-        <div data-testid="body-text">
-          <Typography className="mb-2">
-            {bodyText ||
-              t('message.delete-entity-permanently', {
-                entityType: getTitleCase(entityType),
-              })}
-          </Typography>
-          <Typography className="mb-2">
-            <Trans
-              i18nKey="label.type-to-confirm"
-              values={{ text: t('label.delete-uppercase') }}>
-              <strong />
-            </Trans>
-          </Typography>
-          <Input
-            autoComplete="off"
-            data-testid="confirmation-text-input"
-            disabled={loadingState === 'waiting'}
-            name="entityName"
-            placeholder={t('label.delete-uppercase')}
+    <Modal
+      centered
+      destroyOnClose
+      className={className}
+      closable={false}
+      data-testid="delete-confirmation-modal"
+      footer={
+        <div data-testid="delete-confirmation-modal-footer">
+          <Button
+            className={classNames('mr-2')}
+            data-testid="discard-button"
+            disabled={isLoadingWaiting}
             type="text"
-            value={name}
-            onChange={handleOnChange}
-          />
+            onClick={onCancel}>
+            {t('label.cancel')}
+          </Button>
+          <Button
+            data-testid={isLoadingWaiting ? 'loading-button' : 'confirm-button'}
+            disabled={!isNameMatching()}
+            loading={isLoadingWaiting}
+            type="primary"
+            onClick={onConfirm}>
+            {t('label.confirm')}
+          </Button>
         </div>
-      </Modal>
-    </>
+      }
+      title={
+        <Typography.Text data-testid="modal-header">
+          {softDelete ? (
+            <span>
+              {t('label.soft-delete')} <strong>{entityName}</strong>
+            </span>
+          ) : (
+            <span>
+              {t('label.delete')} <strong>{entityName}</strong>
+            </span>
+          )}
+        </Typography.Text>
+      }
+      visible={visible}
+      width={600}>
+      <div data-testid="body-text">
+        <Typography className="mb-2">
+          {bodyText ||
+            t('message.delete-entity-permanently', {
+              entityType: getTitleCase(entityType),
+            })}
+        </Typography>
+        <Typography className="mb-2">
+          <Trans
+            i18nKey="label.type-to-confirm"
+            values={{ text: t('label.delete-uppercase') }}>
+            <strong />
+          </Trans>
+        </Typography>
+        <Input
+          autoComplete="off"
+          data-testid="confirmation-text-input"
+          disabled={loadingState === 'waiting'}
+          name="entityName"
+          placeholder={t('label.delete-uppercase')}
+          type="text"
+          value={name}
+          onChange={handleOnChange}
+        />
+      </div>
+    </Modal>
   );
 };
 

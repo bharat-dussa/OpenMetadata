@@ -102,79 +102,77 @@ const RelatedTermsModal = ({
   }, []);
 
   return (
-    <>
-      <Modal
-        centered
-        destroyOnClose
-        closable={false}
-        data-testid="confirmation-modal"
-        footer={
-          <div data-testid="cta-container">
-            <Button
-              data-testid="cancelButton"
-              key="remove-edge-btn"
-              type="text"
-              onClick={onCancel}>
-              {t('label.cancel')}
-            </Button>
-            <Button
-              data-testid="saveButton"
-              key="save-btn"
-              type="primary"
-              onClick={() => onSave(selectedOption)}>
-              {t('label.save')}
-            </Button>
-          </div>
-        }
-        title={
-          <Typography.Text strong data-testid="header">
-            {header}
-          </Typography.Text>
-        }
-        visible={visible}
-        width={800}>
-        <div className="h-full">
-          <Searchbar
-            placeholder={`${t('label.search-for-user')}...`}
-            searchValue={searchText}
-            typingInterval={500}
-            onSearch={handleSearchAction}
-          />
-
-          {isLoading ? (
-            <Loader />
-          ) : options.length > 0 ? (
-            <Row gutter={[16, 16]}>
-              {options.map((d) => (
-                <Col key={uniqueId()} span={8}>
-                  <CheckboxUserCard
-                    isActionVisible
-                    isCheckBoxes
-                    item={{
-                      name: '',
-                      displayName: d.displayName || d.name,
-                      id: d.id,
-                      isChecked: isIncludeInOptions(d.id),
-                      type: d.type,
-                    }}
-                    key={d.id}
-                    onSelect={selectionHandler}
-                  />
-                </Col>
-              ))}
-            </Row>
-          ) : (
-            <Typography.Text className="flex justify-center mt-10 text-grey-muted text-base">
-              {searchText
-                ? t('label.no-terms-found-for-searchText', {
-                    searchText,
-                  })
-                : t('label.no-terms-found')}
-            </Typography.Text>
-          )}
+    <Modal
+      centered
+      destroyOnClose
+      closable={false}
+      data-testid="confirmation-modal"
+      footer={
+        <div data-testid="cta-container">
+          <Button
+            data-testid="cancelButton"
+            key="remove-edge-btn"
+            type="text"
+            onClick={onCancel}>
+            {t('label.cancel')}
+          </Button>
+          <Button
+            data-testid="saveButton"
+            key="save-btn"
+            type="primary"
+            onClick={() => onSave(selectedOption)}>
+            {t('label.save')}
+          </Button>
         </div>
-      </Modal>
-    </>
+      }
+      title={
+        <Typography.Text strong data-testid="header">
+          {header}
+        </Typography.Text>
+      }
+      visible={visible}
+      width={800}>
+      <div className="h-full">
+        <Searchbar
+          placeholder={`${t('label.search-for-user')}...`}
+          searchValue={searchText}
+          typingInterval={500}
+          onSearch={handleSearchAction}
+        />
+
+        {isLoading ? (
+          <Loader />
+        ) : options.length > 0 ? (
+          <Row gutter={[16, 16]}>
+            {options.map((d) => (
+              <Col key={uniqueId()} span={8}>
+                <CheckboxUserCard
+                  isActionVisible
+                  isCheckBoxes
+                  item={{
+                    name: '',
+                    displayName: d.displayName || d.name,
+                    id: d.id,
+                    isChecked: isIncludeInOptions(d.id),
+                    type: d.type,
+                  }}
+                  key={d.id}
+                  onSelect={selectionHandler}
+                />
+              </Col>
+            ))}
+          </Row>
+        ) : (
+          <Typography.Text className="flex justify-center mt-10 text-grey-muted text-base">
+            {searchText
+              ? t('label.no-terms-found-for-searchText', {
+                  searchText,
+                })
+              : t('label.no-terms-found')}
+          </Typography.Text>
+        )}
+      </div>
+    </Modal>
   );
 };
 

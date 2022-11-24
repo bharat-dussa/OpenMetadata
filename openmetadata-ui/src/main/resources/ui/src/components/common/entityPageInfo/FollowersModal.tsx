@@ -57,30 +57,28 @@ const FollowersModal = ({
   };
 
   return (
-    <>
-      <Modal
-        centered
-        destroyOnClose
-        data-testid="modal-container"
-        title={
-          <Typography.Text strong data-testid="header">
-            {header}
-          </Typography.Text>
-        }
-        visible={visible}
-        width={800}
-        onCancel={onCancel}>
-        <div>
-          <Searchbar
-            placeholder={`${t('label.search-for-followers')}...`}
-            searchValue={searchText}
-            typingInterval={1500}
-            onSearch={handleSearchAction}
-          />
-          <Row gutter={[16, 16]}>{getUserCards()}</Row>
-        </div>
-      </Modal>
-    </>
+    <Modal
+      centered
+      destroyOnClose
+      data-testid="modal-container"
+      title={
+        <Typography.Text strong data-testid="header">
+          {header}
+        </Typography.Text>
+      }
+      visible={visible}
+      width={800}
+      onCancel={onCancel}>
+      <div>
+        <Searchbar
+          placeholder={`${t('label.search-for-followers')}...`}
+          searchValue={searchText}
+          typingInterval={1500}
+          onSearch={handleSearchAction}
+        />
+        <Row gutter={[16, 16]}>{getUserCards()}</Row>
+      </div>
+    </Modal>
   );
 };
 
