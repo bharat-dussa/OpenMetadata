@@ -22,6 +22,7 @@ describe('Test Ingestion modal component', () => {
   it('Component Should render', async () => {
     const { container } = render(
       <ConfirmationModal
+        visible
         bodyText="Are you sure?"
         cancelText="Cancel"
         confirmText="Save"
@@ -62,6 +63,7 @@ describe('Test Ingestion modal component', () => {
   it('waiting', () => {
     const { getByTestId } = render(
       <ConfirmationModal
+        visible
         bodyClassName=""
         bodyText="Are you sure?"
         cancelButtonCss=""
