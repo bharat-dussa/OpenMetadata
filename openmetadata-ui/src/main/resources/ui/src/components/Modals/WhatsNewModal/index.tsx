@@ -20,25 +20,20 @@ import CloseWhatNewIconComponent from '../CloseWhatNewIconComponent';
 import ChangeLogs from './ChangeLogs';
 import FeaturesCarousel from './FeaturesCarousel';
 import { COOKIE_VERSION, LATEST_VERSION_ID, WHATS_NEW } from './whatsNewData';
+import { ToggleType, WhatsNewModalProps } from './WhatsNewModal.interface';
 import './WhatsNewModal.styles.less';
 import { getReleaseVersionExpiry } from './WhatsNewModal.util';
-
-type Props = {
-  header: string;
-  onCancel: () => void;
-};
-
-type ToggleType = 'features' | 'change-log';
 
 const iconString = `M7.878 3.002a1.876 1.876 0 11-3.751 0 1.876 1.876 0 013.751 0zm1.073.562a3.003
  3.003 0 01-5.897 0H.563a.563.563 0 010-1.125h2.49a3.002 3.002 0 015.898 0h2.491a.563.563 0 010 1.125H8.951z`;
 
 const cookieStorage = new CookieStorage();
 
-export const WhatsNewModal: FunctionComponent<Props> = ({
+export const WhatsNewModal: FunctionComponent<WhatsNewModalProps> = ({
   header,
   onCancel,
-}: Props) => {
+  visible,
+}: WhatsNewModalProps) => {
   const [activeData, setActiveData] = useState(WHATS_NEW[LATEST_VERSION_ID]);
   const [checkedValue, setCheckedValue] = useState<ToggleType>('features');
 
@@ -75,16 +70,16 @@ export const WhatsNewModal: FunctionComponent<Props> = ({
     <Modal
       centered
       destroyOnClose
-      visible
       className="what-news-modal"
       closeIcon={<CloseWhatNewIconComponent handleCancel={handleCancel} />}
       data-testid="whats-new-dialog"
       footer={null}
       title={
-        <Typography.Text data-testid="what-news-header">
+        <Typography.Text strong data-testid="what-news-header">
           {header}
         </Typography.Text>
       }
+      visible={visible}
       width={1200}>
       <div className="flex w-auto h-full">
         <div
