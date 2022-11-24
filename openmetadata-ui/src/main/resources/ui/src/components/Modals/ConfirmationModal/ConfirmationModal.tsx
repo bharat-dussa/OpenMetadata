@@ -41,7 +41,7 @@ const ConfirmationModal = ({
       centered
       destroyOnClose
       className={className}
-      confirmLoading={loadingState === 'waiting'}
+      closable={false}
       data-testid="confirmation-modal"
       footer={
         <div className={classNames('justify-end', footerClassName)}>
@@ -56,7 +56,9 @@ const ConfirmationModal = ({
           <Button
             className={confirmButtonCss}
             danger={confirmText === t('label.delete')}
-            data-testid="save-button"
+            data-testid={
+              loadingState === 'waiting' ? 'loading-button' : 'save-button'
+            }
             key="save-btn"
             type="primary"
             onClick={onConfirm}>

@@ -27,6 +27,7 @@ const FormModal = ({
   initialData,
   errorData,
   isSaveButtonDisabled,
+  visible,
 }: FormModalProp) => {
   const formRef = useRef<FormRef>();
   const [data, setData] = useState<FormData>(initialData);
@@ -43,7 +44,6 @@ const FormModal = ({
     <Modal
       centered
       destroyOnClose
-      visible
       closable={false}
       data-testid="modal-container"
       footer={
@@ -66,6 +66,7 @@ const FormModal = ({
           {header}
         </Typography.Text>
       }
+      visible={visible}
       width={1300}
       onCancel={onCancel}>
       <form id="form-modal" onSubmit={onSubmitHandler}>

@@ -31,6 +31,7 @@ const SchemaModal: FC<SchemaModalProp> = ({
     <Modal
       centered
       destroyOnClose
+      maskClosable
       className={classNames('schema-modal', className)}
       closeIcon={
         <CloseWhatNewIconComponent
@@ -47,7 +48,7 @@ const SchemaModal: FC<SchemaModalProp> = ({
       }
       visible={visible}
       width={800}>
-      <div data-testid="schem-modal-body">
+      <div data-testid="schema-modal-body">
         <SchemaEditor
           className="tw-border tw-border-main tw-rounded-md tw-py-4"
           editorClass="custom-entity-schema"

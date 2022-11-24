@@ -14,12 +14,12 @@
 import { Button, Input, Modal, Typography } from 'antd';
 import classNames from 'classnames';
 import { t } from 'i18next';
-import React, { ChangeEvent, FC, useCallback, useMemo, useState } from 'react';
+import React, { ChangeEvent, useCallback, useMemo, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { getTitleCase } from '../../../utils/EntityUtils';
 import { EntityDeleteModalProp } from './EntityDeleteModal.interface';
 
-const EntityDeleteModal: FC<EntityDeleteModalProp> = ({
+const EntityDeleteModal = ({
   loadingState = 'initial',
   className,
   entityName,
