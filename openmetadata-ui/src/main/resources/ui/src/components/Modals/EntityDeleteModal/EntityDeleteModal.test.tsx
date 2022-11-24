@@ -29,7 +29,7 @@ const mockProp = {
 
 describe('Test EntityDelete Modal Component', () => {
   it('Should render component', async () => {
-    const { container } = render(<EntityDeleteModal {...mockProp} />, {
+    const { container } = render(<EntityDeleteModal visible {...mockProp} />, {
       wrapper: MemoryRouter,
     });
 
@@ -47,7 +47,7 @@ describe('Test EntityDelete Modal Component', () => {
   });
 
   it('Should initially render confirm button as disable', async () => {
-    const { container } = render(<EntityDeleteModal {...mockProp} />, {
+    const { container } = render(<EntityDeleteModal visible {...mockProp} />, {
       wrapper: MemoryRouter,
     });
 
@@ -58,7 +58,7 @@ describe('Test EntityDelete Modal Component', () => {
 
   it('Should render discard button and input box as disable if loading state is wating', async () => {
     const { container } = render(
-      <EntityDeleteModal {...mockProp} loadingState="waiting" />,
+      <EntityDeleteModal visible {...mockProp} loadingState="waiting" />,
       {
         wrapper: MemoryRouter,
       }
@@ -73,7 +73,7 @@ describe('Test EntityDelete Modal Component', () => {
 
   it('Should show loading button if loading state is waiting', async () => {
     const { container } = render(
-      <EntityDeleteModal {...mockProp} loadingState="waiting" />,
+      <EntityDeleteModal visible {...mockProp} loadingState="waiting" />,
       {
         wrapper: MemoryRouter,
       }
@@ -85,7 +85,7 @@ describe('Test EntityDelete Modal Component', () => {
   });
 
   it('Confirm button should be enable if confirm text matches', async () => {
-    const { container } = render(<EntityDeleteModal {...mockProp} />, {
+    const { container } = render(<EntityDeleteModal visible {...mockProp} />, {
       wrapper: MemoryRouter,
     });
 
@@ -107,7 +107,7 @@ describe('Test EntityDelete Modal Component', () => {
   });
 
   it('Should call onCancel on click of discard button', async () => {
-    const { container } = render(<EntityDeleteModal {...mockProp} />, {
+    const { container } = render(<EntityDeleteModal visible {...mockProp} />, {
       wrapper: MemoryRouter,
     });
 

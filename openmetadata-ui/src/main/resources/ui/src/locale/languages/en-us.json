@@ -339,7 +339,10 @@
     "enter-description": "Enter Description",
     "edit-description-for": "Edit Description for {{entityName}}",
     "search-for-followers": "Search for followers",
-    "followers-of": "Followers of {{entityName}}"
+    "followers-of": "Followers of {{entityName}}",
+    "delete-uppercase": "DELETE",
+    "soft-delete": "Soft delete",
+    "type-to-confirm": "Type <0>{{text}}</0> to confirm"
   },
   "message": {
     "service-email-required": "Service account Email is required",
@@ -402,7 +405,8 @@
     "are-you-sure-to-revoke-access": "Are you sure you want to revoke access for JWT token?",
     "are-you-sure-delete-property": "Are you sure you want to delete the property {{propertyName}}",
     "are-you-sure-want-to": "Are you sure you want to {{text}}",
-    "are-you-sure-delete-tag": "Are you sure you want to delete the tag {{isCategory}} {{tagName}}?"
+    "are-you-sure-delete-tag": "Are you sure you want to delete the tag {{isCategory}} {{tagName}}?",
+    "delete-entity-permanently": "Once you delete this {{entityType}}, it will be removed permanently"
   },
   "server": {
     "no-followed-entities": "You have not followed anything yet.",
