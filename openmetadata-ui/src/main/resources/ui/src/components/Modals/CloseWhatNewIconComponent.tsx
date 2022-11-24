@@ -2,13 +2,15 @@ import React from 'react';
 
 const CloseWhatNewIconComponent = ({
   handleCancel,
+  dataTestId,
 }: {
-  handleCancel: () => void;
+  handleCancel?: () => void;
+  dataTestId?: string;
 }) => {
   return (
     <svg
       className="w-6 h-6 m-l-xss cursor-pointer"
-      data-testid="closeWhatsNew"
+      data-testid={dataTestId}
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"

@@ -71,7 +71,12 @@ export const WhatsNewModal: FunctionComponent<WhatsNewModalProps> = ({
       centered
       destroyOnClose
       className="what-news-modal"
-      closeIcon={<CloseWhatNewIconComponent handleCancel={handleCancel} />}
+      closeIcon={
+        <CloseWhatNewIconComponent
+          dataTestId="closeWhatsNew"
+          handleCancel={handleCancel}
+        />
+      }
       data-testid="whats-new-dialog"
       footer={null}
       title={

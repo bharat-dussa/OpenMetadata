@@ -826,8 +826,11 @@ const DashboardDetails = ({
       </div>
       {editChart && (
         <ModalWithMarkdownEditor
-          header={`Edit Chart: "${editChart.chart.displayName}"`}
-          placeholder="Enter Chart Description"
+          visible
+          header={t('label.edit-chart', {
+            chartName: editChart.chart.displayName,
+          })}
+          placeholder={t('label.enter-chart-description')}
           value={editChart.chart.description || ''}
           onCancel={closeEditChartModal}
           onSave={onChartUpdate}
