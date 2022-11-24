@@ -37,7 +37,7 @@ describe('Test Schema modal component', () => {
   });
 
   it('Should render schema modal component', async () => {
-    const { findByTestId } = render(<SchemaModal {...mockProp} />, {
+    const { findByTestId } = render(<SchemaModal visible {...mockProp} />, {
       wrapper: MemoryRouter,
     });
 
@@ -63,7 +63,7 @@ describe('Test Schema modal component', () => {
   });
 
   it('Should call onClose method on click of backedrop', async () => {
-    const { findByTestId } = render(<SchemaModal {...mockProp} />, {
+    const { findByTestId } = render(<SchemaModal visible {...mockProp} />, {
       wrapper: MemoryRouter,
     });
 
@@ -77,7 +77,7 @@ describe('Test Schema modal component', () => {
   });
 
   it('Should call onClose method on click of close button', async () => {
-    const { findByTestId } = render(<SchemaModal {...mockProp} />, {
+    const { findByTestId } = render(<SchemaModal visible {...mockProp} />, {
       wrapper: MemoryRouter,
     });
 
