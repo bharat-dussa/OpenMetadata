@@ -342,7 +342,11 @@
     "followers-of": "Followers of {{entityName}}",
     "delete-uppercase": "DELETE",
     "soft-delete": "Soft delete",
-    "type-to-confirm": "Type <0>{{text}}</0> to confirm"
+    "type-to-confirm": "Type <0>{{text}}</0> to confirm",
+    "explore-now": "Explore Now",
+    "successfully-completed-the-tour": "You’ve successfully completed the tour.",
+    "get-started-with-open-metadata": "Get started with OpenMetadata",
+    "open-metadata-logo": "OpenMetadata Logo"
   },
   "message": {
     "service-email-required": "Service account Email is required",
