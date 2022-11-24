@@ -327,7 +327,8 @@
     "add-reviewers": "Add Reviewers",
     "no-terms-found": "No terms found",
     "no-terms-found-for-searchText": "No terms found for {{searchText}}",
-    "add-related-terms": "Add Related Terms"
+    "add-related-terms": "Add Related Terms",
+    "change-logs": "Change Logs"
   },
   "message": {
     "service-email-required": "Service account Email is required",
