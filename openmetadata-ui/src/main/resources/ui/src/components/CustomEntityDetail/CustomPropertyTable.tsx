@@ -10,9 +10,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 import { Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
+import { t } from 'i18next';
 import { isEmpty } from 'lodash';
 import React, { FC, Fragment, useMemo, useState } from 'react';
 import { NO_PERMISSION_FOR_ACTION } from '../../constants/HelperTextUtil';
