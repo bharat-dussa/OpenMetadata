@@ -344,7 +344,10 @@
     "tag": "Tag",
     "service": "Service",
     "chart": "Chart",
-    "task": "Task"
+    "task": "Task",
+    "edit-description-for": "Edit Description for {{entityName}}",
+    "search-for-followers": "Search for followers",
+    "followers-of": "Followers of {{entityName}}"
   },
   "message": {
     "service-email-required": "Service account Email is required",
