@@ -166,16 +166,15 @@ export const CustomPropertyTable: FC<CustomPropertyTableProp> = ({
         onCancel={resetSelectedProperty}
         onConfirm={handlePropertyDelete}
       />
-      <ModalWithMarkdownEditor
-        header={t('label.edit-property', {
-          propertyName: selectedProperty.name,
-        })}
-        placeholder={t('label.enter-property-description')}
-        value={selectedProperty.description || ''}
-        visible={updateCheck}
-        onCancel={resetSelectedProperty}
-        onSave={handlePropertyUpdate}
-      />
+      {updateCheck && (
+        <ModalWithMarkdownEditor
+          header={`Edit Property: "${selectedProperty.name}"`}
+          placeholder="Enter Property Description"
+          value={selectedProperty.description || ''}
+          onCancel={resetSelectedProperty}
+          onSave={handlePropertyUpdate}
+        />
+      )}
     </Fragment>
   );
 };
