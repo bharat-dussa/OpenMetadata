@@ -370,8 +370,6 @@
     "select-service-type": "Select Service Type",
     "connection-details": "Connection Details",
     "markdown-editor-placeholder": "Use @mention to tag a user or a team.\nUse #mention to tag a data asset.",
-    "add-related-terms": "Add Related Terms",
-    "change-logs": "Change Logs",
     "tag": "Tag",
     "tag-lowercase": "tag",
     "service": "Service",
@@ -383,6 +381,7 @@
     "hide": "Hide",
     "restore-team": "Restore Team",
     "remove": "Remove",
+    "data-insight-plural": "Data Insights",
     "configure-entity": "Configure {{entity}}",
     "name-lowercase": "name",
     "field-invalid": "{{field}} is invalid",
@@ -420,7 +419,11 @@
     "azure": "Azure",
     "okta": "Okta",
     "custom-oidc": "CustomOidc",
-    "service-sso": "{{serviceType}} $t(label.sso-uppercase)"
+    "service-sso": "{{serviceType}} $t(label.sso-uppercase)",
+    "mention-you-thread-lowercase": "mentioned you on the",
+    "assign-you-task-lowercase": "assigned you a new task",
+    "updated-by": "Updated by",
+    "on-lowercase": "on"
   },
   "message": {
     "service-email-required": "Service account Email is required",
