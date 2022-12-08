@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Tooltip } from 'antd';
 import classNames from 'classnames';
 import cryptoRandomString from 'crypto-random-string-with-promisify-polyfill';
+import { t } from 'i18next';
 import { cloneDeep, isEmpty, isNil, trim } from 'lodash';
 import { EditorContentRef } from 'Models';
 import React, {
@@ -31,13 +32,9 @@ import {
   GlobalSettingOptions,
   GlobalSettingsMenuCategory,
 } from '../../constants/GlobalSettings.constants';
-import {
-  CONFIGURE_MS_TEAMS_TEXT,
-  CONFIGURE_SLACK_TEXT,
-  CONFIGURE_WEBHOOK_TEXT,
-  NO_PERMISSION_FOR_ACTION,
-} from '../../constants/HelperTextUtil';
+import { NO_PERMISSION_FOR_ACTION } from '../../constants/HelperTextUtil';
 import { UrlEntityCharRegEx } from '../../constants/regex.constants';
+import { LOADING_STATE } from '../../enums/common.enum';
 import { FormSubmitType } from '../../enums/form.enum';
 import { PageLayoutType } from '../../enums/layout.enum';
 import {
@@ -70,11 +67,27 @@ import EventFilterTree from './EventFilterTree.component';
 
 const CONFIGURE_TEXT: { [key: string]: { body: string; heading: string } } = {
   msteams: {
-    body: CONFIGURE_MS_TEAMS_TEXT,
-    heading: 'Configure MS Team Webhooks',
+    body: t('message.configure-webhook-name-message', {
+      webhookType: t('label.ms-teams'),
+    }),
+    heading: t('label.configure-webhook-type', {
+      webhookType: t('label.ms-team'),
+    }),
   },
-  slack: { body: CONFIGURE_SLACK_TEXT, heading: 'Configure Slack Webhooks' },
-  generic: { body: CONFIGURE_WEBHOOK_TEXT, heading: 'Configure Webhooks' },
+  slack: {
+    body: t('message.configure-webhook-name-message', {
+      webhookType: t('label.slack'),
+    }),
+    heading: t('label.configure-webhook-type', {
+      webhookType: t('label.slack'),
+    }),
+  },
+  generic: {
+    body: t('message.configure-webhook-message'),
+    heading: t('label.configure-webhook-type', {
+      webhookType: '',
+    }),
+  },
 };
 
 const Field = ({ children }: { children: React.ReactNode }) => {
@@ -85,8 +98,8 @@ const AddWebhook: FunctionComponent<AddWebhookProps> = ({
   data,
   header,
   mode = FormSubmitType.ADD,
-  saveState = 'initial',
-  deleteState = 'initial',
+  saveState = LOADING_STATE.INITIAL,
+  deleteState = LOADING_STATE.INITIAL,
   allowAccess = true,
   webhookType = WebhookType.Generic,
   onCancel,
@@ -244,7 +257,7 @@ const AddWebhook: FunctionComponent<AddWebhookProps> = ({
   const getDeleteButton = () => {
     return (
       <>
-        {deleteState === 'waiting' ? (
+        {deleteState === LOADING_STATE.WAITING ? (
           <Button
             disabled
             className="tw-w-16 tw-h-10 disabled:tw-opacity-100"
@@ -257,7 +270,9 @@ const AddWebhook: FunctionComponent<AddWebhookProps> = ({
           <Tooltip
             placement="left"
             title={
-              deleteWebhookPermission ? 'Delete' : NO_PERMISSION_FOR_ACTION
+              deleteWebhookPermission
+                ? t('label.delete')
+                : NO_PERMISSION_FOR_ACTION
             }>
             <Button
               data-testid="delete-webhook"
@@ -266,7 +281,7 @@ const AddWebhook: FunctionComponent<AddWebhookProps> = ({
               theme="primary"
               variant="text"
               onClick={() => setIsDelete(true)}>
-              Delete
+              {t('label.delete')}
             </Button>
           </Tooltip>
         )}
@@ -279,7 +294,7 @@ const AddWebhook: FunctionComponent<AddWebhookProps> = ({
 
     return (
       <>
-        {saveState === 'waiting' ? (
+        {saveState === LOADING_STATE.WAITING ? (
           <Button
             disabled
             className="tw-w-16 tw-h-10 disabled:tw-opacity-100"
@@ -288,7 +303,7 @@ const AddWebhook: FunctionComponent<AddWebhookProps> = ({
             variant="contained">
             <Loader size="small" type="white" />
           </Button>
-        ) : saveState === 'success' ? (
+        ) : saveState === LOADING_STATE.SUCCESS ? (
           <Button
             disabled
             className="tw-w-16 tw-h-10 disabled:tw-opacity-100"
