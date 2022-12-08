@@ -157,7 +157,7 @@
     "auth-mechanism": "Auth Mechanism",
     "token-end-point": "TokenEndpoint",
     "client-id": "ClientId",
-    "secret-key": "SecretKey",
+    "secret-key": "Secret Key",
     "scopes": "Scopes",
     "okta-email": "Okta Service account Email",
     "org-url": "OrgUrl",
@@ -414,7 +414,14 @@
     "invalid-name": "Invalid name",
     "role-name": "Role name",
     "select-a-policy": "Select a policy",
-    "at-least-one-policy": "At least one policy"
+    "at-least-one-policy": "At least one policy",
+    "webhook": "Webhook",
+    "endpoint-url": "Endpoint URL",
+    "active": "Active",
+    "event-filters": "Event Filters",
+    "show-or-hide-advanced-config": "{{showAdv}} Advanced Config",
+    "advanced-config": "Advanced Config",
+    "batch-size": "Batch Size"
   },
   "message": {
     "service-email-required": "Service account Email is required",
@@ -504,9 +511,10 @@
     "webhook-type-listing-message": "Provide timely updates to the producers and consumers of metadata via {{webhookType}} notifications. Use {{webhookType}} webhooks to send notifications regarding the metadata change events in your organization through APIs. You can add, list, update, and delete these webhooks.",
     "webhook-listing-message": "The webhook allows external services to be notified of the metadata change events happening in your organization through APIs. Register callback URLs with webhook integration to receive metadata event notifications. You can add, list, update, and delete webhooks.",
     "email-is-invalid": "Email is invalid.",
-    "field-text-is-required": "{{fieldText}} is required!",
+    "field-text-is-required": "{{fieldText}} is required.",
     "entity-owned-by-name": "This Entity is Owned by {{entityOwner}}",
-    "and-followed-owned-by-name": "and followed team owned by {{userName}}"
+    "and-followed-owned-by-name": "and followed team owned by {{userName}}",
+    "field-text-is-invalid": "{{fieldText}} is invalid."
   },
   "server": {
     "no-followed-entities": "You have not followed anything yet.",

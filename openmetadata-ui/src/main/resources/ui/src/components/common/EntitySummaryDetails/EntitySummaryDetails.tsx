@@ -254,6 +254,7 @@ const EntitySummaryDetails = ({
                       ? `${t('message.entity-owned-by-name', {
                           entityOwner: displayVal,
                         })}
+                        
                         ${t('message.and-followed-owned-by-name', {
                           userName: !isUndefined(userDetails)
                             ? userDetails.ownerName

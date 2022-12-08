@@ -137,7 +137,7 @@ const BotListV1 = ({
                   disabled={isDisabled}
                   icon={
                     <SVGIcons
-                      alt="Delete"
+                      alt={t('label.delete')}
                       className="tw-w-4"
                       icon={Icons.DELETE}
                     />
