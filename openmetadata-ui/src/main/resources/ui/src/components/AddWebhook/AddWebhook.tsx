@@ -519,7 +519,7 @@ const AddWebhook: FunctionComponent<AddWebhookProps> = ({
                       <label
                         className="tw-block tw-form-label"
                         htmlFor="batch-size">
-                        {t('label.batch-size')}
+                        {t('label.batch-size')}:
                       </label>
                       <input
                         className="tw-form-inputs tw-form-inputs-padding"

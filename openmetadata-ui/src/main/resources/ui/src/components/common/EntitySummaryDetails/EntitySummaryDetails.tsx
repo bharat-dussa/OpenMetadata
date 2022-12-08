@@ -252,7 +252,7 @@ const EntitySummaryDetails = ({
                   content={
                     displayVal
                       ? `${t('message.entity-owned-by-name', {
-                          entityOwner: displayVal,
+                          entityOwner: displayVal ?? '',
                         })}
                         
                         ${t('message.and-followed-owned-by-name', {

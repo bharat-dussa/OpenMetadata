@@ -13,8 +13,6 @@
 
 import { t } from 'i18next';
 
-/* eslint-disable max-len */
-
 export const NO_PERMISSION_FOR_ACTION = t('label.no-permission-for-action');
 
 export const NO_PERMISSION_TO_VIEW = t('label.no-permission-to-view');
