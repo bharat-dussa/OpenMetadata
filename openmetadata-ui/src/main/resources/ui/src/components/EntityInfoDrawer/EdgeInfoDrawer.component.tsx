@@ -1,6 +1,6 @@
 import { CloseOutlined } from '@ant-design/icons';
 import { Col, Divider, Drawer, Row, Typography } from 'antd';
-import { isUndefined } from 'lodash';
+import { isUndefined, toLower } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -70,7 +70,7 @@ const EdgeInfoDrawer = ({
         value: targetHandle ? getNameFromFQN(targetHandle) : undefined,
       },
       pipeline: {
-        key: t('label.pipeline'),
+        key: toLower(t('label.pipeline')),
         value: data?.pipeline ? getEntityName(data?.pipeline) : undefined,
         link:
           data?.pipeline &&
