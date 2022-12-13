@@ -425,7 +425,8 @@
     "updated-by": "Updated by",
     "on-lowercase": "on",
     "webhook-display-text": "Webhook {{displayText}}",
-    "endpoint": "Endpoint"
+    "endpoint": "Endpoint",
+    "add-term": "Add Term"
   },
   "message": {
     "service-email-required": "Service account Email is required",
