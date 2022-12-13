@@ -36,7 +36,7 @@ import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import AppState from '../../AppState';
-import { reactivateTeam } from '../../axiosAPIs/teamsAPI';
+import { restoreTeam } from '../../axiosAPIs/teamsAPI';
 import {
   getTeamAndUserDetailsPath,
   getUserPath,
@@ -44,10 +44,6 @@ import {
   PAGE_SIZE_MEDIUM,
 } from '../../constants/constants';
 import { TEAMS_DOCS } from '../../constants/docs.constants';
-import {
-  NO_PERMISSION_FOR_ACTION,
-  NO_PERMISSION_TO_VIEW,
-} from '../../constants/HelperTextUtil';
 import { EntityType } from '../../enums/entity.enum';
 import { OwnerType } from '../../enums/user.enum';
 import { Operation } from '../../generated/entity/policies/policy';
@@ -80,7 +76,6 @@ import SVGIcons, { Icons } from '../../utils/SvgUtils';
 import {
   filterChildTeams,
   getDeleteMessagePostFix,
-  getRestoreTeamData,
 } from '../../utils/TeamUtils';
 import { showErrorToast, showSuccessToast } from '../../utils/ToastUtils';
 import { Button } from '../buttons/Button/Button';
@@ -278,7 +273,7 @@ const TeamDetailsV1 = ({
               title={
                 entityPermissions.EditAll
                   ? t('label.remove')
-                  : NO_PERMISSION_FOR_ACTION
+                  : t('message.no-permission-for-action')
               }>
               <ButtonAntd
                 data-testid="remove-user-btn"
@@ -518,26 +513,24 @@ const TeamDetailsV1 = ({
 
   const handleReactiveTeam = async () => {
     try {
-      const res = await reactivateTeam(
-        getRestoreTeamData(currentTeam, childTeams)
-      );
+      const res = await restoreTeam(currentTeam.id);
       if (res) {
         afterDeleteAction();
         showSuccessToast(
           t('message.entity-restored-success', {
-            entity: 'Team',
+            entity: t('label.team'),
           })
         );
       } else {
         throw t('message.entity-restored-error', {
-          entity: 'Team',
+          entity: t('label.team'),
         });
       }
     } catch (error) {
       showErrorToast(
         error as AxiosError,
         t('message.entity-restored-error', {
-          entity: 'Team',
+          entity: t('label.team'),
         })
       );
     }
@@ -778,18 +771,19 @@ const TeamDetailsV1 = ({
             description: (
               <div className="tw-mb-2">
                 <p>
-                  {t('label.no-users')}{' '}
-                  {teamUsersSearchText
-                    ? `as ${teamUsersSearchText}.`
-                    : `added yet.`}
+                  {t('label.no-users', {
+                    text: teamUsersSearchText
+                      ? `${t('label.as-lowercase')} ${teamUsersSearchText}.`
+                      : t('label.added-yet-lowercase'),
+                  })}
                 </p>
                 <p>{t('label.adding-some')} </p>
               </div>
             ),
             disabled: !entityPermissions.EditAll,
             title: entityPermissions.EditAll
-              ? 'Add New User'
-              : NO_PERMISSION_FOR_ACTION,
+              ? t('label.add-new-user')
+              : t('message.no-permission-for-action'),
 
             onClick: () => handleAddUser(true),
             label: t('label.add-new-user'),
@@ -801,7 +795,7 @@ const TeamDetailsV1 = ({
               <div className="tw-w-4/12">
                 <Searchbar
                   removeMargin
-                  placeholder="Search for user..."
+                  placeholder={`${t('label.search-for-user')}...`}
                   searchValue={teamUsersSearchText}
                   typingInterval={500}
                   onSearch={handleTeamUsersSearchAction}
@@ -819,7 +813,7 @@ const TeamDetailsV1 = ({
                     title={
                       entityPermissions.EditAll
                         ? t('label.add-user')
-                        : NO_PERMISSION_FOR_ACTION
+                        : t('message.no-permission-for-action')
                     }
                     variant="contained"
                     onClick={() => {
@@ -1001,7 +995,7 @@ const TeamDetailsV1 = ({
                       ? t('label.edit-entity', {
                           entity: t('label.display-name'),
                         })
-                      : NO_PERMISSION_FOR_ACTION
+                      : t('message.no-permission-for-action')
                   }>
                   <button
                     className="tw-ml-2 focus:tw-outline-none"
@@ -1071,11 +1065,11 @@ const TeamDetailsV1 = ({
                     extraDropdownContent={extraDropdownContent}
                     hardDeleteMessagePostFix={getDeleteMessagePostFix(
                       currentTeam.fullyQualifiedName || currentTeam.name,
-                      'permanently'
+                      t('label.permanently-lowercase')
                     )}
                     softDeleteMessagePostFix={getDeleteMessagePostFix(
                       currentTeam.fullyQualifiedName || currentTeam.name,
-                      'soft'
+                      t('label.soft-lowercase')
                     )}
                   />
                 )}
@@ -1159,17 +1153,17 @@ const TeamDetailsV1 = ({
                   fetchErrorPlaceHolder({
                     title: createTeamPermission
                       ? t('label.add-team')
-                      : NO_PERMISSION_FOR_ACTION,
+                      : t('message.no-permission-for-action'),
                     label: t('label.add-team'),
                     onClick: () => handleAddTeam(true),
                     disabled: !createTeamPermission,
-                    heading: 'Team',
+                    heading: t('label.team'),
                     datatestid: 'add-team',
                   })
                 ) : (
                   <Row
                     className="team-list-container"
-                    gutter={[8, 8]}
+                    gutter={[8, 16]}
                     justify="space-between">
                     <Col span={8}>
                       <Searchbar
@@ -1188,7 +1182,7 @@ const TeamDetailsV1 = ({
                           title={
                             createTeamPermission
                               ? t('label.add-team')
-                              : NO_PERMISSION_FOR_ACTION
+                              : t('message.no-permission-for-action')
                           }
                           type="primary"
                           onClick={() => handleAddTeam(true)}>
@@ -1198,6 +1192,7 @@ const TeamDetailsV1 = ({
                     </Col>
                     <Col span={24}>
                       <TeamHierarchy
+                        currentTeam={currentTeam}
                         data={table as Team[]}
                         onTeamExpand={onTeamExpand}
                       />
@@ -1214,7 +1209,7 @@ const TeamDetailsV1 = ({
                   fetchErrorPlaceHolder({
                     title: entityPermissions.EditAll
                       ? t('label.add-role')
-                      : NO_PERMISSION_FOR_ACTION,
+                      : t('message.no-permission-for-action'),
                     label: t('label.add-role'),
                     onClick: () =>
                       setAddAttribute({
@@ -1222,7 +1217,7 @@ const TeamDetailsV1 = ({
                         selectedData: currentTeam.defaultRoles || [],
                       }),
                     disabled: !entityPermissions.EditAll,
-                    heading: 'Role',
+                    heading: t('label.role'),
                     datatestid: 'add-role',
                   })
                 ) : (
@@ -1235,7 +1230,7 @@ const TeamDetailsV1 = ({
                       title={
                         entityPermissions.EditAll
                           ? t('label.add-role')
-                          : NO_PERMISSION_FOR_ACTION
+                          : t('message.no-permission-for-action')
                       }
                       type="primary"
                       onClick={() =>
@@ -1261,7 +1256,7 @@ const TeamDetailsV1 = ({
                   fetchErrorPlaceHolder({
                     title: entityPermissions.EditAll
                       ? t('label.add-policy')
-                      : NO_PERMISSION_FOR_ACTION,
+                      : t('message.no-permission-for-action'),
                     label: t('label.add-policy'),
                     datatestid: 'add-policy',
                     onClick: () =>
@@ -1270,7 +1265,7 @@ const TeamDetailsV1 = ({
                         selectedData: currentTeam.policies || [],
                       }),
                     disabled: !entityPermissions.EditAll,
-                    heading: 'Policies',
+                    heading: t('label.policies'),
                   })
                 ) : (
                   <Space
@@ -1282,7 +1277,7 @@ const TeamDetailsV1 = ({
                       title={
                         entityPermissions.EditAll
                           ? t('label.add-policy')
-                          : NO_PERMISSION_FOR_ACTION
+                          : t('message.no-permission-for-action')
                       }
                       type="primary"
                       onClick={() =>
@@ -1318,7 +1313,7 @@ const TeamDetailsV1 = ({
                 title={
                   createTeamPermission
                     ? t('label.add-team')
-                    : NO_PERMISSION_FOR_ACTION
+                    : t('message.no-permission-for-action')
                 }
                 variant="outlined"
                 onClick={() => handleAddTeam(true)}>
@@ -1327,7 +1322,7 @@ const TeamDetailsV1 = ({
             </div>
           }
           doc={TEAMS_DOCS}
-          heading="Teams"
+          heading={t('label.teams')}
           type="ADD_DATA"
         />
       )}
@@ -1386,7 +1381,7 @@ const TeamDetailsV1 = ({
     <Row align="middle" className="tw-h-full">
       <Col span={24}>
         <ErrorPlaceHolder>
-          <p>{NO_PERMISSION_TO_VIEW}</p>
+          <p>{t('message.no-permission-to-view')}</p>
         </ErrorPlaceHolder>
       </Col>
     </Row>
