@@ -25,7 +25,7 @@ import {
 } from '../../../utils/RouterUtils';
 import SVGIcons, { Icons } from '../../../utils/SvgUtils';
 
-const List = ({
+const RolesDetailPageList = ({
   list,
   type,
   onDelete,
@@ -126,4 +126,4 @@ const List = ({
   );
 };
 
-export default List;
+export default RolesDetailPageList;

@@ -43,7 +43,7 @@ import { getSettingPath } from '../../../utils/RouterUtils';
 import { showErrorToast } from '../../../utils/ToastUtils';
 import AddAttributeModal from '../AddAttributeModal/AddAttributeModal';
 import './RolesDetail.less';
-import List from './RolesDetailPageTableList.component';
+import RolesDetailPageList from './RolesDetailPageList.component';
 
 const { TabPane } = Tabs;
 
@@ -308,7 +308,7 @@ const RolesDetailPage = () => {
                         {t('label.add-policy')}
                       </Button>
                     </Tooltip>
-                    <List
+                    <RolesDetailPageList
                       hasAccess={rolePermission.EditAll}
                       list={role.policies ?? []}
                       type="policy"
@@ -319,7 +319,7 @@ const RolesDetailPage = () => {
                   </Space>
                 </TabPane>
                 <TabPane key="teams" tab={t('label.teams')}>
-                  <List
+                  <RolesDetailPageList
                     hasAccess={rolePermission.EditAll}
                     list={role.teams ?? []}
                     type="team"
@@ -329,7 +329,7 @@ const RolesDetailPage = () => {
                   />
                 </TabPane>
                 <TabPane key="users" tab={t('label.users')}>
-                  <List
+                  <RolesDetailPageList
                     hasAccess={rolePermission.EditAll}
                     list={role.users ?? []}
                     type="user"

@@ -66,7 +66,7 @@ import {
 import SVGIcons, { Icons } from '../../../utils/SvgUtils';
 import { showErrorToast } from '../../../utils/ToastUtils';
 import './PoliciesDetail.less';
-import List from './TableList.component';
+import PoliciesDetailsList from './PoliciesDetailsList.component';
 
 const { TabPane } = Tabs;
 
@@ -503,7 +503,7 @@ const PoliciesDetailPage = () => {
                   )}
                 </TabPane>
                 <TabPane key="roles" tab={t('label.roles')}>
-                  <List
+                  <PoliciesDetailsList
                     hasAccess={policyPermission.EditAll}
                     list={policy.roles ?? []}
                     type="role"
@@ -513,7 +513,7 @@ const PoliciesDetailPage = () => {
                   />
                 </TabPane>
                 <TabPane key="teams" tab={t('label.teams')}>
-                  <List
+                  <PoliciesDetailsList
                     hasAccess={policyPermission.EditAll}
                     list={policy.teams ?? []}
                     type="team"

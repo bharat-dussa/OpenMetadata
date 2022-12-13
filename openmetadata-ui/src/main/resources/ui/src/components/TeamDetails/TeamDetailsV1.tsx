@@ -280,7 +280,7 @@ const TeamDetailsV1 = ({
                 disabled={!entityPermissions.EditAll}
                 icon={
                   <SVGIcons
-                    alt="Remove"
+                    alt={t('label.remove')}
                     className="tw-w-4 tw-mb-2.5"
                     icon={Icons.ICON_REMOVE}
                   />
@@ -633,7 +633,9 @@ const TeamDetailsV1 = ({
   );
 
   const restoreIcon = useMemo(
-    () => <SVGIcons alt="Restore" icon={Icons.RESTORE} width="16px" />,
+    () => (
+      <SVGIcons alt={t('label.restore')} icon={Icons.RESTORE} width="16px" />
+    ),
     [currentTeam.isJoinable]
   );
 
