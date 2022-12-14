@@ -501,7 +501,9 @@
     "mlmodel": "ML Model",
     "search-entity": "Search {{entity}}",
     "more": "More",
-    "update": "Update"
+    "update": "Update",
+    "add-category": "Add Category",
+    "add-tag-category": "Add Tag Category"
   },
   "message": {
     "service-email-required": "Service account Email is required",
