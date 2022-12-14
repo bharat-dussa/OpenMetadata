@@ -479,7 +479,18 @@
     "last-run": "Last Run",
     "search-entity": "Search {{entity}}",
     "more": "More",
-    "update": "Update"
+    "update": "Update",
+    "reply-in-conversation": "Reply in conversation",
+    "older-reply-lowercase": "older reply",
+    "older-replies-lowercase": "older replies",
+    "created-a-task-lowercase": "created a task",
+    "posted-on-lowercase": "posted on",
+    "announcement": "Announcement",
+    "conversation": "Conversation",
+    "url-lowercase": "url",
+    "schemas": "Schemas",
+    "activity-feeds": "Activity Feeds",
+    "profiler": "Profiler"
   },
   "message": {
     "service-email-required": "Service account Email is required",
