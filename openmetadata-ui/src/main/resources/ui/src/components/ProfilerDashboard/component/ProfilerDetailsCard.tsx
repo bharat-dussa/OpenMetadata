@@ -22,7 +22,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { formatNumberWithComma } from '../../../utils/CommonUtils';
+import { getStatisticsDisplayValue } from '../../../utils/CommonUtils';
 import ErrorPlaceHolder from '../../common/error-with-placeholder/ErrorPlaceHolder';
 import { ProfilerDetailsCardProps } from '../profilerDashboard.interface';
 
@@ -46,7 +46,7 @@ const ProfilerDetailsCard: React.FC<ProfilerDetailsCardProps> = ({
       <>
         {tickFormatter
           ? `${numValue.toFixed(2)}${tickFormatter}`
-          : formatNumberWithComma(numValue)}
+          : getStatisticsDisplayValue(numValue)}
       </>
     );
   };
@@ -63,7 +63,7 @@ const ProfilerDetailsCard: React.FC<ProfilerDetailsCardProps> = ({
                 value={
                   tickFormatter
                     ? `${info.latestValue}${tickFormatter}`
-                    : formatNumberWithComma(info.latestValue as number)
+                    : getStatisticsDisplayValue(info.latestValue as number)
                 }
                 valueStyle={{ color: info.color }}
               />
