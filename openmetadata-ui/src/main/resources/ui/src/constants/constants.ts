@@ -12,7 +12,6 @@
  */
 
 import { COOKIE_VERSION } from '../components/Modals/WhatsNewModal/whatsNewData';
-import { WebhookType } from '../generated/api/events/createWebhook';
 import { getSettingPath } from '../utils/RouterUtils';
 import { getEncodedFqn } from '../utils/StringsUtils';
 import { FQN_SEPARATOR_CHAR } from './char.constants';
@@ -27,6 +26,7 @@ export const LITE_GRAY_COLOR = '#DBE0EB';
 export const TEXT_BODY_COLOR = '#37352F';
 export const SUCCESS_COLOR = '#008376';
 export const DE_ACTIVE_COLOR = '#6B7280';
+export const GRAPH_BACKGROUND_COLOR = '#f5f5f5';
 
 export const SUPPORTED_FIELD_TYPES = ['string', 'markdown', 'integer'];
 
@@ -262,6 +262,7 @@ export const ROUTES = {
   TEST_SUITES_WITH_FQN: `/test-suites/${PLACEHOLDER_TEST_SUITE_FQN}`,
   TEST_SUITES_ADD_INGESTION: `/test-suites/${PLACEHOLDER_TEST_SUITE_FQN}/add-ingestion`,
   TEST_SUITES_EDIT_INGESTION: `/test-suites/${PLACEHOLDER_TEST_SUITE_FQN}/edit-ingestion/${PLACEHOLDER_ROUTE_INGESTION_FQN}`,
+  ADD_TEST_SUITES: `/add-test-suites`,
 
   // logs viewer
   LOGS: `/${LOG_ENTITY_TYPE}/${INGESTION_NAME}/logs`,
@@ -360,15 +361,6 @@ export const getDatabaseSchemaDetailsPath = (
 
   if (tab) {
     path = path.replace(PLACEHOLDER_ROUTE_TAB, tab);
-  }
-
-  return path;
-};
-
-export const getAddWebhookPath = (webhookType?: WebhookType) => {
-  let path = webhookType ? ROUTES.ADD_WEBHOOK_WITH_TYPE : ROUTES.ADD_WEBHOOK;
-  if (webhookType) {
-    path = path.replace(PLACEHOLDER_WEBHOOK_TYPE, webhookType);
   }
 
   return path;
@@ -520,7 +512,7 @@ export const configOptions = {
 export const NOTIFICATION_READ_TIMER = 2500;
 export const TIER_CATEGORY = 'Tier';
 
-export const ENTITY_PATH = {
+export const ENTITY_PATH: Record<string, string> = {
   tables: 'table',
   topics: 'topic',
   dashboards: 'dashboard',

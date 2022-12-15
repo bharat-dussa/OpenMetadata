@@ -29,7 +29,6 @@ import {
   toLower,
   toUpper,
 } from 'lodash';
-import { EntityType } from 'Models';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
@@ -40,10 +39,11 @@ import SearchedData from '../../components/searched-data/SearchedData';
 import { API_RES_MAX_SIZE, ENTITY_PATH } from '../../constants/constants';
 import { tabsInfo } from '../../constants/explore.constants';
 import { INITIAL_TEST_RESULT_SUMMARY } from '../../constants/profiler.constant';
-import { TabSpecificField } from '../../enums/entity.enum';
+import { EntityType, TabSpecificField } from '../../enums/entity.enum';
 import { SearchIndex } from '../../enums/search.enum';
 import { Table } from '../../generated/entity/data/table';
 import { Include } from '../../generated/type/include';
+import { getDropDownItems } from '../../utils/AdvancedSearchUtils';
 import {
   formatNumberWithComma,
   formTwoDigitNmber,
@@ -52,7 +52,6 @@ import {
 import { updateTestResults } from '../../utils/DataQualityAndProfilerUtils';
 import { generateEntityLink } from '../../utils/TableUtils';
 import { showErrorToast } from '../../utils/ToastUtils';
-import { Entities } from '../AddWebhook/WebhookConstants';
 import { FacetFilterProps } from '../common/facetfilter/facetFilter.interface';
 import PageLayoutV1 from '../containers/PageLayoutV1';
 import Loader from '../Loader/Loader';
@@ -111,7 +110,7 @@ const Explore: React.FC<ExploreProps> = ({
 
   // get entity active tab by URL params
   const defaultActiveTab = useMemo(() => {
-    const entityName = toUpper(ENTITY_PATH[tab as EntityType] ?? 'table');
+    const entityName = toUpper(ENTITY_PATH[tab] ?? 'table');
 
     return SearchIndex[entityName as ExploreSearchIndexKey];
   }, [tab]);
@@ -237,34 +236,23 @@ const Explore: React.FC<ExploreProps> = ({
   };
 
   const handleAdvanceSearchFilter = (data: ExploreQuickFilterField[]) => {
-    const term = {} as Record<string, unknown>;
+    const terms = [] as Array<Record<string, unknown>>;
 
     data.forEach((filter) => {
-      if (filter.key) {
-        term[filter.key] = filter.value;
-      }
+      filter.value?.map((val) => {
+        if (filter.key) {
+          terms.push({ term: { [filter.key]: val } });
+        }
+      });
     });
 
     onChangeAdvancedSearchQueryFilter(
-      isEmpty(term)
+      isEmpty(terms)
         ? undefined
         : {
-            query: { bool: { must: [{ term }] } },
+            query: { bool: { must: terms } },
           }
     );
-  };
-
-  const handleAdvanceFieldClear = () => {
-    setSelectedQuickFilters([]);
-  };
-
-  const handleAdvanceFieldRemove = (value: string) => {
-    setSelectedQuickFilters((prev) => {
-      const data = prev.filter((p) => p.key !== value);
-      handleAdvanceSearchFilter(data);
-
-      return data;
-    });
   };
 
   const handleAdvanceFieldValueSelect = (field: ExploreQuickFilterField) => {
@@ -283,16 +271,6 @@ const Explore: React.FC<ExploreProps> = ({
     });
   };
 
-  const handleAdvancedFieldSelect = (value: string) => {
-    const flag = selectedQuickFilters.some((field) => field.key === value);
-    if (!flag) {
-      setSelectedQuickFilters((pre) => [
-        ...pre,
-        { key: value, value: undefined },
-      ]);
-    }
-  };
-
   useEffect(() => {
     const escapeKeyHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -305,6 +283,14 @@ const Explore: React.FC<ExploreProps> = ({
       document.removeEventListener('keydown', escapeKeyHandler);
     };
   }, []);
+
+  useEffect(() => {
+    const dropdownItems = getDropDownItems(searchIndex);
+
+    setSelectedQuickFilters(
+      dropdownItems.map((item) => ({ ...item, value: undefined }))
+    );
+  }, [searchIndex]);
 
   return (
     <PageLayoutV1
@@ -393,9 +379,6 @@ const Explore: React.FC<ExploreProps> = ({
               fields={selectedQuickFilters}
               index={searchIndex}
               onAdvanceSearch={() => setShowAdvanceSearchModal(true)}
-              onClear={handleAdvanceFieldClear}
-              onFieldRemove={handleAdvanceFieldRemove}
-              onFieldSelect={handleAdvancedFieldSelect}
               onFieldValueSelect={handleAdvanceFieldValueSelect}
             />
           </Col>
@@ -407,7 +390,7 @@ const Explore: React.FC<ExploreProps> = ({
                 currentPage={page}
                 data={searchResults?.hits.hits ?? []}
                 handleSummaryPanelDisplay={
-                  tab === toLower(Entities.table)
+                  tab === toLower(EntityType.TABLE)
                     ? handleSummaryPanelDisplay
                     : undefined
                 }
@@ -426,7 +409,7 @@ const Explore: React.FC<ExploreProps> = ({
           </Col>
         </Row>
       </div>
-      {tab === toLower(Entities.table) && (
+      {tab === toLower(EntityType.TABLE) && (
         <EntitySummaryPanel
           entityDetails={entityDetails || ({} as Table)}
           handleClosePanel={handleClosePanel}
