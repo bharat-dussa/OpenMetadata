@@ -11,6 +11,7 @@
  *  limitations under the License.
  */
 
+import { toString } from 'lodash';
 import React from 'react';
 import { LegendProps } from 'recharts';
 import { getStatisticsDisplayValue } from './CommonUtils';
@@ -38,7 +39,7 @@ export const renderColorfulLegendText: LegendProps['formatter'] = (
 export const axisTickFormatter = (value: number, tickFormatter?: string) => {
   return tickFormatter
     ? `${value}${tickFormatter}`
-    : getStatisticsDisplayValue(value);
+    : toString(getStatisticsDisplayValue(value));
 };
 
 export const updateActiveChartFilter = (
