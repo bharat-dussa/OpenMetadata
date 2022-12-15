@@ -24,6 +24,7 @@ import {
   isNull,
   isString,
   isUndefined,
+  toNumber,
   toString,
   uniqueId,
 } from 'lodash';
@@ -701,12 +702,14 @@ export const formatNumberWithComma = (number: number) => {
  * @param {number} number - The number to be formatted.
  * @returns A function that takes a number and returns a string.
  */
-export const getStatisticsDisplayValue = (number: number) => {
+export const getStatisticsDisplayValue = (
+  number: string | number | undefined
+) => {
   if (timeFormatRegex.test(toString(number))) {
     return number;
   }
 
-  return formatNumberWithComma(number);
+  return formatNumberWithComma(toNumber(number));
 };
 
 export const formTwoDigitNmber = (number: number) => {

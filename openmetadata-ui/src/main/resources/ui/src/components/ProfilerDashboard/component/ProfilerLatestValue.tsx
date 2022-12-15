@@ -37,7 +37,7 @@ const ProfilerLatestValue = ({
           value={
             tickFormatter || stringValue
               ? `${info.latestValue}${tickFormatter ?? ''}`
-              : getStatisticsDisplayValue(info.latestValue as number)
+              : getStatisticsDisplayValue(info.latestValue)
           }
           valueStyle={{ color: info.color, fontSize: '18px', fontWeight: 700 }}
         />
