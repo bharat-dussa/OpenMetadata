@@ -166,7 +166,7 @@ const ActivityFeedList: FC<ActivityFeedListProp> = ({
                 icon={getFeedFilterDropdownIcon(feedFilter)}
                 type="link"
                 onClick={() => setFieldListVisible((visible) => !visible)}>
-                <Typography.Text className="font-normal text-primary m-x-xss">
+                <Typography.Text className="font-medium text-primary m-x-xss">
                   {feedFilterList.find((f) => f.value === feedFilter)?.name}
                 </Typography.Text>
                 <DropDownIcon className="dropdown-icon" />
@@ -191,7 +191,7 @@ const ActivityFeedList: FC<ActivityFeedListProp> = ({
                 icon={getThreadFilterDropdownIcon(threadType ?? 'ALL')}
                 type="link"
                 onClick={() => setShowThreadTypeList((visible) => !visible)}>
-                <Typography.Text className="font-normal text-primary m-x-xss">
+                <Typography.Text className="font-medium text-primary m-x-xss">
                   {
                     threadFilterList.find(
                       (f) => f.value === (threadType ?? 'ALL')
