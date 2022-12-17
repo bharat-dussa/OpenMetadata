@@ -11,9 +11,13 @@
  *  limitations under the License.
  */
 
+import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Typography } from 'antd';
+import { ExpandableConfig } from 'antd/lib/table/interface';
 import classNames from 'classnames';
-import i18n from 'i18next';
-import { upperCase } from 'lodash';
+import { t } from 'i18next';
+import { isEmpty, upperCase } from 'lodash';
 import { EntityTags } from 'Models';
 import React from 'react';
 import { ReactComponent as DashboardIcon } from '../assets/svg/dashboard-grey.svg';
@@ -44,6 +48,7 @@ import { TagLabel } from '../generated/type/tagLabel';
 import {
   getPartialNameFromTableFQN,
   getTableFQNFromColumnFQN,
+  sortTagsCaseInsensitive,
 } from './CommonUtils';
 import { getGlossaryPath, getSettingPath } from './RouterUtils';
 import { ordinalize } from './StringsUtils';
@@ -51,12 +56,10 @@ import SVGIcons, { Icons } from './SvgUtils';
 
 export const getBadgeName = (tableType?: string) => {
   switch (tableType) {
-    case 'REGULAR':
-      return 'table';
     case 'QUERY':
-      return 'query';
+      return t('label.query-lowercase');
     default:
-      return 'table';
+      return t('label.table-lowercase');
   }
 };
 
@@ -74,8 +77,8 @@ export const getUsagePercentile = (pctRank: number, isLiteral = false) => {
   const percentile = Math.round(pctRank * 10) / 10;
   const ordinalPercentile = ordinalize(percentile);
   const usagePercentile = `${
-    isLiteral ? i18n.t('label.usage') : ''
-  } - ${ordinalPercentile} ${i18n.t('label.pctile-lowercase')}`;
+    isLiteral ? t('label.usage') : ''
+  } - ${ordinalPercentile} ${t('label.pctile-lowercase')}`;
 
   return usagePercentile;
 };
@@ -137,28 +140,28 @@ export const getConstraintIcon = (constraint = '', className = '') => {
   switch (constraint) {
     case ConstraintTypes.PRIMARY_KEY:
       {
-        title = 'Primary key';
+        title = t('label.primary-key');
         icon = Icons.KEY;
       }
 
       break;
     case ConstraintTypes.UNIQUE:
       {
-        title = 'Unique';
+        title = t('label.unique');
         icon = Icons.UNIQUE;
       }
 
       break;
     case ConstraintTypes.NOT_NULL:
       {
-        title = 'Not null';
+        title = t('label.not-null');
         icon = Icons.NOT_NULL;
       }
 
       break;
     case ConstraintTypes.FOREIGN_KEY:
       {
-        title = 'Foreign key';
+        title = t('label.foreign-key');
         icon = Icons.FOREGIN_KEY;
       }
 
@@ -262,7 +265,10 @@ export const getEntityIcon = (indexType: string) => {
 export const makeRow = (column: Column) => {
   return {
     description: column.description || '',
-    tags: column?.tags || [],
+    // Sorting tags as the response of PATCH request does not return the sorted order
+    // of tags, but is stored in sorted manner in the database
+    // which leads to wrong PATCH payload sent after further tags removal
+    tags: sortTagsCaseInsensitive(column.tags || []),
     key: column?.name,
     ...column,
   };
@@ -354,3 +360,23 @@ export const getTestResultBadgeIcon = (status?: TestCaseStatus) => {
       return '';
   }
 };
+
+export function getTableExpandableConfig<
+  T extends { children?: T[] }
+>(): ExpandableConfig<T> {
+  const expandableConfig: ExpandableConfig<T> = {
+    rowExpandable: (record: T) => !isEmpty(record.children),
+
+    expandIcon: ({ expanded, onExpand, expandable, record }) =>
+      expandable && (
+        <Typography.Text
+          className="m-r-xs cursor-pointer"
+          data-testid="expand-icon"
+          onClick={(e) => onExpand(record, e)}>
+          <FontAwesomeIcon icon={expanded ? faCaretDown : faCaretRight} />
+        </Typography.Text>
+      ),
+  };
+
+  return expandableConfig;
+}

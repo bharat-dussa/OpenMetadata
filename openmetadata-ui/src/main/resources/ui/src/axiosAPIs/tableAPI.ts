@@ -13,7 +13,8 @@
 
 import { AxiosResponse } from 'axios';
 import { Operation } from 'fast-json-patch';
-import { RestoreEntitiesRequestType } from 'Models';
+import { PagingResponse, RestoreRequestType } from 'Models';
+import { SystemProfile } from '../generated/api/data/createTableProfile';
 import {
   ColumnProfile,
   Table,
@@ -98,7 +99,7 @@ export const patchTableDetails = async (id: string, data: Operation[]) => {
 
 export const restoreTable = async (id: string) => {
   const response = await APIClient.put<
-    RestoreEntitiesRequestType,
+    RestoreRequestType,
     AxiosResponse<Table>
   >('/tables/restore', { id });
 
@@ -160,21 +161,33 @@ export const putTableProfileConfig = async (
 };
 
 export const getTableProfilesList = async (
-  tableId: string,
+  tableFqn: string,
   params?: {
     startTs?: number;
     endTs?: number;
-    limit?: number;
-    before?: string;
-    after?: string;
   }
 ) => {
-  const url = `/tables/${tableId}/tableProfile`;
+  const url = `/tables/${tableFqn}/tableProfile`;
 
-  const response = await APIClient.get<{
-    data: TableProfile[];
-    paging: Paging;
-  }>(url, { params });
+  const response = await APIClient.get<PagingResponse<TableProfile[]>>(url, {
+    params,
+  });
+
+  return response.data;
+};
+
+export const getSystemProfileList = async (
+  tableFqn: string,
+  params?: {
+    startTs?: number;
+    endTs?: number;
+  }
+) => {
+  const url = `/tables/${tableFqn}/systemProfile`;
+
+  const response = await APIClient.get<PagingResponse<SystemProfile[]>>(url, {
+    params,
+  });
 
   return response.data;
 };
@@ -195,6 +208,26 @@ export const getColumnProfilerList = async (
     data: ColumnProfile[];
     paging: Paging;
   }>(url, { params });
+
+  return response.data;
+};
+
+export const getSampleDataByTableId = async (id: string) => {
+  const response = await APIClient.get<Table>(`/tables/${id}/sampleData`);
+
+  return response.data;
+};
+
+export const getTableQueryByTableId = async (id: string) => {
+  const response = await APIClient.get<Table>(`/tables/${id}/tableQuery`);
+
+  return response.data;
+};
+
+export const getLatestTableProfileByFqn = async (fqn: string) => {
+  const response = await APIClient.get<Table>(
+    `/tables/${fqn}/tableProfile/latest`
+  );
 
   return response.data;
 };

@@ -39,7 +39,7 @@ import {
   getListKpiResult,
   getListKPIs,
 } from '../../axiosAPIs/KpiAPI';
-import { ROUTES } from '../../constants/constants';
+import { GRAPH_BACKGROUND_COLOR, ROUTES } from '../../constants/constants';
 import {
   BAR_CHART_MARGIN,
   DATA_INSIGHT_GRAPH_COLORS,
@@ -76,7 +76,6 @@ const KPIChart: FC<Props> = ({ chartFilter }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleAddKpi = () => history.push(ROUTES.ADD_KPI);
-  const handleListKpi = () => history.push(ROUTES.KPI_LIST);
 
   const fetchKpiList = async () => {
     try {
@@ -200,7 +199,6 @@ const KPIChart: FC<Props> = ({ chartFilter }) => {
               {t('label.kpi-subtitle')}
             </Typography.Text>
           </div>
-          <Button onClick={handleListKpi}>View All KPI&apos;s</Button>
         </Space>
       }>
       {kpiList.length ? (
@@ -216,7 +214,10 @@ const KPIChart: FC<Props> = ({ chartFilter }) => {
               <Col span={19}>
                 <ResponsiveContainer debounce={1} minHeight={400}>
                   <LineChart data={graphData} margin={BAR_CHART_MARGIN}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                    <CartesianGrid
+                      stroke={GRAPH_BACKGROUND_COLOR}
+                      vertical={false}
+                    />
                     <XAxis dataKey="timestamp" />
                     <YAxis />
                     <Tooltip

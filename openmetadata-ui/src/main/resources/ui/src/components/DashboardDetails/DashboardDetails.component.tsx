@@ -31,7 +31,7 @@ import { FQN_SEPARATOR_CHAR } from '../../constants/char.constants';
 import { EntityField } from '../../constants/Feeds.constants';
 import { observerOptions } from '../../constants/Mydata.constants';
 import { SettledStatus } from '../../enums/axios.enum';
-import { EntityType } from '../../enums/entity.enum';
+import { EntityInfo, EntityType } from '../../enums/entity.enum';
 import { OwnerType } from '../../enums/user.enum';
 import { Dashboard } from '../../generated/entity/data/dashboard';
 import { ThreadType } from '../../generated/entity/feed/thread';
@@ -219,7 +219,7 @@ const DashboardDetails = ({
 
   const extraInfo: Array<ExtraInfo> = [
     {
-      key: 'Owner',
+      key: EntityInfo.OWNER,
       value: getOwnerValue(owner),
       placeholderText: getEntityPlaceHolder(
         getEntityName(owner),
@@ -230,11 +230,11 @@ const DashboardDetails = ({
       profileName: owner?.type === OwnerType.USER ? owner?.name : undefined,
     },
     {
-      key: 'Tier',
+      key: EntityInfo.TIER,
       value: tier?.tagFQN ? tier.tagFQN.split(FQN_SEPARATOR_CHAR)[1] : '',
     },
     {
-      key: `${serviceType} Url`,
+      key: `${serviceType} ${EntityInfo.URL}`,
       value: dashboardUrl,
       placeholderText: entityName,
       isLink: true,
@@ -575,7 +575,7 @@ const DashboardDetails = ({
               <Tooltip
                 title={
                   dashboardPermissions.EditAll
-                    ? t('label.edit-description')
+                    ? t('label.edit-entity', { entity: t('label.description') })
                     : t('message.no-permission-for-action')
                 }>
                 <button
@@ -595,43 +595,46 @@ const DashboardDetails = ({
         ),
       },
       {
-        title: t('label.tags'),
+        title: t('label.tag-plural'),
         dataIndex: 'tags',
         key: 'tags',
         width: 300,
-        render: (text, record, index) => (
-          <div
-            className="relative tableBody-cell"
-            data-testid="tags-wrapper"
-            onClick={() => handleTagContainerClick(record, index)}>
-            {deleted ? (
-              <div className="tw-flex tw-flex-wrap">
-                <TagsViewer sizeCap={-1} tags={text || []} />
-              </div>
-            ) : (
-              <TagsContainer
-                editable={editChartTags?.index === index}
-                isLoading={isTagLoading && editChartTags?.index === index}
-                selectedTags={text as EntityTags[]}
-                showAddTagButton={
-                  dashboardPermissions.EditAll || dashboardPermissions.EditTags
-                }
-                size="small"
-                tagList={tagList}
-                type="label"
-                onCancel={() => {
-                  handleChartTagSelection();
-                }}
-                onSelectionChange={(tags) => {
-                  handleChartTagSelection(tags, {
-                    chart: record,
-                    index,
-                  });
-                }}
-              />
-            )}
-          </div>
-        ),
+        render: (tags: Dashboard['tags'], record, index) => {
+          return (
+            <div
+              className="relative tableBody-cell"
+              data-testid="tags-wrapper"
+              onClick={() => handleTagContainerClick(record, index)}>
+              {deleted ? (
+                <Space>
+                  <TagsViewer sizeCap={-1} tags={tags || []} />
+                </Space>
+              ) : (
+                <TagsContainer
+                  editable={editChartTags?.index === index}
+                  isLoading={isTagLoading && editChartTags?.index === index}
+                  selectedTags={tags || []}
+                  showAddTagButton={
+                    dashboardPermissions.EditAll ||
+                    dashboardPermissions.EditTags
+                  }
+                  size="small"
+                  tagList={tagList}
+                  type="label"
+                  onCancel={() => {
+                    handleChartTagSelection();
+                  }}
+                  onSelectionChange={(tags) => {
+                    handleChartTagSelection(tags, {
+                      chart: record,
+                      index,
+                    });
+                  }}
+                />
+              )}
+            </div>
+          );
+        },
       },
     ],
     [
@@ -641,6 +644,7 @@ const DashboardDetails = ({
       tagList,
       deleted,
       isTagLoading,
+      charts,
     ]
   );
 

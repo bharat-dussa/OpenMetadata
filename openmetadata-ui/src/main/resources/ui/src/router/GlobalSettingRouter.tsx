@@ -31,9 +31,6 @@ import {
 import AdminProtectedRoute from './AdminProtectedRoute';
 import withSuspenseFallback from './withSuspenseFallback';
 
-const WebhooksPageV1 = withSuspenseFallback(
-  React.lazy(() => import('../pages/WebhooksPage/WebhooksPageV1.component'))
-);
 const ServicesPage = withSuspenseFallback(
   React.lazy(() => import('../pages/services/ServicesPage'))
 );
@@ -66,14 +63,7 @@ const PoliciesListPage = withSuspenseFallback(
 const UserListPageV1 = withSuspenseFallback(
   React.lazy(() => import('../pages/UserListPage/UserListPageV1'))
 );
-const SlackSettingsPage = withSuspenseFallback(
-  React.lazy(
-    () => import('../pages/SlackSettingsPage/SlackSettingsPage.component')
-  )
-);
-const MsTeamsPage = withSuspenseFallback(
-  React.lazy(() => import('../pages/MsTeamsPage/MsTeamsPage.component'))
-);
+
 const ElasticSearchIndexPage = withSuspenseFallback(
   React.lazy(
     () =>
@@ -169,18 +159,6 @@ const GlobalSettingRouter = () => {
 
       <AdminProtectedRoute
         exact
-        component={WebhooksPageV1}
-        hasPermission={userPermissions.hasViewPermissions(
-          ResourceEntity.WEBHOOK,
-          permissions
-        )}
-        path={getSettingPath(
-          GlobalSettingsMenuCategory.INTEGRATIONS,
-          GlobalSettingOptions.WEBHOOK
-        )}
-      />
-      <AdminProtectedRoute
-        exact
         component={BotsPageV1}
         hasPermission={userPermissions.hasViewPermissions(
           ResourceEntity.BOT,
@@ -192,18 +170,6 @@ const GlobalSettingRouter = () => {
         )}
       />
 
-      <AdminProtectedRoute
-        exact
-        component={SlackSettingsPage}
-        hasPermission={userPermissions.hasViewPermissions(
-          ResourceEntity.WEBHOOK,
-          permissions
-        )}
-        path={getSettingPath(
-          GlobalSettingsMenuCategory.INTEGRATIONS,
-          GlobalSettingOptions.SLACK
-        )}
-      />
       <AdminProtectedRoute
         exact
         // Currently we don't have any permission related to ActivityFeed settings page
@@ -218,26 +184,11 @@ const GlobalSettingRouter = () => {
           GlobalSettingOptions.ACTIVITY_FEED
         )}
       />
-      <AdminProtectedRoute
-        exact
-        component={MsTeamsPage}
-        hasPermission={userPermissions.hasViewPermissions(
-          ResourceEntity.WEBHOOK,
-          permissions
-        )}
-        path={getSettingPath(
-          GlobalSettingsMenuCategory.INTEGRATIONS,
-          GlobalSettingOptions.MSTEAMS
-        )}
-      />
 
       <AdminProtectedRoute
         exact
         component={ElasticSearchIndexPage}
-        hasPermission={userPermissions.hasViewPermissions(
-          ResourceEntity.ALL,
-          permissions
-        )}
+        hasPermission={false}
         path={getSettingPath(
           GlobalSettingsMenuCategory.EVENT_PUBLISHERS,
           GlobalSettingOptions.ELASTIC_SEARCH

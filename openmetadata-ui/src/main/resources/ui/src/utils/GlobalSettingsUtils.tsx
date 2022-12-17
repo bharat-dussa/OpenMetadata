@@ -22,15 +22,12 @@ import { ReactComponent as ElasticSearchIcon } from '../../src/assets/svg/elasti
 import { ReactComponent as RolesIcon } from '../../src/assets/svg/icon-role-grey.svg';
 import { ReactComponent as OMLogo } from '../../src/assets/svg/metadata.svg';
 import { ReactComponent as MlModelIcon } from '../../src/assets/svg/mlmodal.svg';
-import { ReactComponent as MSTeamsIcon } from '../../src/assets/svg/ms-teams.svg';
 import { ReactComponent as PipelineIcon } from '../../src/assets/svg/pipeline-grey.svg';
 import { ReactComponent as PoliciesIcon } from '../../src/assets/svg/policies.svg';
-import { ReactComponent as SlackIcon } from '../../src/assets/svg/slack.svg';
 import { ReactComponent as TableIcon } from '../../src/assets/svg/table-grey.svg';
 import { ReactComponent as TeamsIcon } from '../../src/assets/svg/teams-grey.svg';
 import { ReactComponent as TopicIcon } from '../../src/assets/svg/topic-grey.svg';
 import { ReactComponent as UsersIcon } from '../../src/assets/svg/user.svg';
-import { ReactComponent as WebhookIcon } from '../../src/assets/svg/webhook-grey.svg';
 import {
   ResourceEntity,
   UIPermission,
@@ -48,7 +45,8 @@ export interface MenuList {
 }
 
 export const getGlobalSettingsMenuWithPermission = (
-  permissions: UIPermission
+  permissions: UIPermission,
+  isAdminUser: boolean | undefined
 ) => {
   return [
     {
@@ -218,10 +216,7 @@ export const getGlobalSettingsMenuWithPermission = (
       items: [
         {
           label: 'Elasticsearch',
-          isProtected: userPermissions.hasViewPermissions(
-            ResourceEntity.ALL,
-            permissions
-          ),
+          isProtected: Boolean(isAdminUser),
           icon: (
             <ElasticSearchIcon className="tw-w-4 tw-mt-1.5 side-panel-icons" />
           ),
@@ -231,30 +226,6 @@ export const getGlobalSettingsMenuWithPermission = (
     {
       category: 'Integrations',
       items: [
-        {
-          label: 'Webhook',
-          isProtected: userPermissions.hasViewPermissions(
-            ResourceEntity.WEBHOOK,
-            permissions
-          ),
-          icon: <WebhookIcon className="tw-w-4 side-panel-icons" />,
-        },
-        {
-          label: 'Slack',
-          isProtected: userPermissions.hasViewPermissions(
-            ResourceEntity.WEBHOOK,
-            permissions
-          ),
-          icon: <SlackIcon className="tw-w-4 side-panel-icons" />,
-        },
-        {
-          label: 'MS Teams',
-          isProtected: userPermissions.hasViewPermissions(
-            ResourceEntity.WEBHOOK,
-            permissions
-          ),
-          icon: <MSTeamsIcon className="tw-w-4 side-panel-icons" />,
-        },
         {
           label: 'Bots',
           isProtected: userPermissions.hasViewPermissions(

@@ -12,6 +12,7 @@
  */
 
 import { AxiosError } from 'axios';
+import { isEmpty } from 'lodash';
 import { EntityTags, ExtraInfo } from 'Models';
 import React, {
   Fragment,
@@ -26,7 +27,7 @@ import { restoreTopic } from '../../axiosAPIs/topicsAPI';
 import { FQN_SEPARATOR_CHAR } from '../../constants/char.constants';
 import { EntityField } from '../../constants/Feeds.constants';
 import { observerOptions } from '../../constants/Mydata.constants';
-import { EntityType } from '../../enums/entity.enum';
+import { EntityInfo, EntityType } from '../../enums/entity.enum';
 import { OwnerType } from '../../enums/user.enum';
 import { Topic } from '../../generated/entity/data/topic';
 import { ThreadType } from '../../generated/entity/feed/thread';
@@ -69,6 +70,7 @@ import {
 import SampleDataTopic from '../SampleDataTopic/SampleDataTopic';
 import SchemaEditor from '../schema-editor/SchemaEditor';
 import { TopicDetailsProps } from './TopicDetails.interface';
+import TopicSchemaFields from './TopicSchema/TopicSchema';
 
 const TopicDetails: React.FC<TopicDetailsProps> = ({
   topicDetails,
@@ -77,8 +79,6 @@ const TopicDetails: React.FC<TopicDetailsProps> = ({
   maximumMessageSize,
   replicationFactor,
   retentionSize,
-  schemaText,
-  schemaType,
   topicTags,
   activeTab,
   entityName,
@@ -167,22 +167,25 @@ const TopicDetails: React.FC<TopicDetailsProps> = ({
 
   const getConfigDetails = () => {
     return [
-      { key: 'Partitions', value: `${partitions} partitions` },
       {
-        key: 'Replication Factor',
-        value: `${replicationFactor} replication factor`,
+        key: EntityInfo.PARTITIONS,
+        value: `${partitions} ${t('label.partitions')}`,
       },
       {
-        key: 'Retention Size',
-        value: `${bytesToSize(retentionSize)} retention size`,
+        key: EntityInfo.REPLICATION_FACTOR,
+        value: `${replicationFactor} ${t('label.replication-factor')}`,
       },
       {
-        key: 'Clean-up Policies',
-        value: `${cleanupPolicies.join(', ')} clean-up policies`,
+        key: EntityInfo.RETENTION_SIZE,
+        value: `${bytesToSize(retentionSize)}  ${t('label.retention-size')}`,
       },
       {
-        key: 'Max Message Size',
-        value: `${bytesToSize(maximumMessageSize)} maximum size`,
+        key: EntityInfo.CLEAN_UP_POLICIES,
+        value: `${cleanupPolicies.join(', ')} ${t('label.clean-up-policies')}`,
+      },
+      {
+        key: EntityInfo.MAX_MESSAGE_SIZE,
+        value: `${bytesToSize(maximumMessageSize)} ${t('label.maximum-size')} `,
       },
     ];
   };
@@ -262,7 +265,7 @@ const TopicDetails: React.FC<TopicDetailsProps> = ({
 
   const extraInfo: Array<ExtraInfo> = [
     {
-      key: t('label.owner'),
+      key: EntityInfo.OWNER,
       value: getOwnerValue(owner),
       placeholderText: getEntityPlaceHolder(
         getEntityName(owner),
@@ -273,7 +276,7 @@ const TopicDetails: React.FC<TopicDetailsProps> = ({
       profileName: owner?.type === OwnerType.USER ? owner?.name : undefined,
     },
     {
-      key: t('label.tier'),
+      key: EntityInfo.TIER,
       value: tier?.tagFQN ? tier.tagFQN.split(FQN_SEPARATOR_CHAR)[1] : '',
     },
     ...getConfigDetails(),
@@ -449,6 +452,19 @@ const TopicDetails: React.FC<TopicDetailsProps> = ({
     }
   };
 
+  const handleSchemaFieldsUpdate = async (
+    updatedMessageSchema: Topic['messageSchema']
+  ) => {
+    try {
+      await settingsUpdateHandler({
+        ...topicDetails,
+        messageSchema: updatedMessageSchema,
+      });
+    } catch (error) {
+      showErrorToast(error as AxiosError);
+    }
+  };
+
   useEffect(() => {
     setFollowersData(followers);
   }, [followers]);
@@ -558,14 +574,27 @@ const TopicDetails: React.FC<TopicDetailsProps> = ({
                       />
                     </div>
                   </div>
-                  {schemaText ? (
+                  {!isEmpty(topicDetails.messageSchema?.schemaFields) ? (
                     <Fragment>
-                      {getInfoBadge([{ key: 'Schema', value: schemaType }])}
-                      <div
-                        className="tw-my-4 tw-border tw-border-main tw-rounded-md tw-py-4"
-                        data-testid="schema">
-                        <SchemaEditor value={schemaText} />
-                      </div>
+                      {getInfoBadge([
+                        {
+                          key: 'Schema',
+                          value: topicDetails.messageSchema?.schemaType ?? '',
+                        },
+                      ])}
+                      <TopicSchemaFields
+                        className="mt-4"
+                        hasDescriptionEditAccess={
+                          topicPermissions.EditAll ||
+                          topicPermissions.EditDescription
+                        }
+                        hasTagEditAccess={
+                          topicPermissions.EditAll || topicPermissions.EditTags
+                        }
+                        isReadOnly={Boolean(deleted)}
+                        messageSchema={topicDetails.messageSchema}
+                        onUpdate={handleSchemaFieldsUpdate}
+                      />
                     </Fragment>
                   ) : (
                     <div className="tw-flex tw-justify-center tw-font-medium tw-items-center tw-border tw-border-main tw-rounded-md tw-p-8">

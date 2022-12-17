@@ -53,8 +53,7 @@ it('add and ingest data', () => {
 
  const addIngestionInput = () => {
    cy.get('[data-testid="schema-filter-pattern-checkbox"]')
-     .scrollIntoView()
-     .should('be.visible')
+   .invoke('show').trigger('mouseover')
      .check();
      cy.get('[data-testid="filter-pattern-includes-schema"]')
      .scrollIntoView()
@@ -82,6 +81,7 @@ it('Update table description and verify description after re-run', () => {
 
 it('Add Usage ingestion', () => {
   interceptURL('GET', 'api/v1/teams/name/Organization?fields=*', 'getSettingsPage');
+  interceptURL("POST", "/api/v1/services/ingestionPipelines/deploy/*", "deployIngestion");
   cy.get('[data-testid="appbar-item-settings"]').should('be.visible').click({ force: true });
   verifyResponseStatusCode('@getSettingsPage', 200);
   // Services page
@@ -118,16 +118,15 @@ it('Add Usage ingestion', () => {
 
   scheduleIngestion();
 
-  // wait for ingestion to run
-  cy.clock();
-  cy.wait(10000);
 
-  cy.get('[data-testid="view-service-button"]')
-    .scrollIntoView()
-    .should('be.visible')
-    .click();
+  cy.wait("@deployIngestion").then(() => {
+    cy.get('[data-testid="view-service-button"]')
+        .scrollIntoView()
+        .should('be.visible')
+        .click();
 
-  handleIngestionRetry('database', true, 0, 'usage');
+    handleIngestionRetry('database', true, 0, 'usage');
+  });
 });
 
 it('Verify if usage is ingested properly',() => {

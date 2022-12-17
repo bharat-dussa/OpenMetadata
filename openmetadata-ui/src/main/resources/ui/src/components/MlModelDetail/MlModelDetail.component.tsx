@@ -13,6 +13,7 @@
 
 import { Col, Row, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
+import { AxiosError } from 'axios';
 import classNames from 'classnames';
 import { isEmpty, isUndefined, startCase, uniqueId } from 'lodash';
 import { observer } from 'mobx-react';
@@ -29,6 +30,7 @@ import React, {
 import { useTranslation } from 'react-i18next';
 import { useHistory } from 'react-router-dom';
 import AppState from '../../AppState';
+import { restoreMlmodel } from '../../axiosAPIs/mlModelAPI';
 import { FQN_SEPARATOR_CHAR } from '../../constants/char.constants';
 import {
   getDashboardDetailsPath,
@@ -36,7 +38,7 @@ import {
 } from '../../constants/constants';
 import { EntityField } from '../../constants/Feeds.constants';
 import { observerOptions } from '../../constants/Mydata.constants';
-import { EntityType } from '../../enums/entity.enum';
+import { EntityInfo, EntityType } from '../../enums/entity.enum';
 import { ServiceCategory } from '../../enums/service.enum';
 import { OwnerType } from '../../enums/user.enum';
 import { MlHyperParameter } from '../../generated/api/data/createMlModel';
@@ -52,13 +54,14 @@ import {
   getEntityName,
   getEntityPlaceHolder,
   getOwnerValue,
+  refreshPage,
 } from '../../utils/CommonUtils';
 import { getEntityFieldThreadCounts } from '../../utils/FeedUtils';
 import { DEFAULT_ENTITY_PERMISSION } from '../../utils/PermissionsUtils';
 import { getLineageViewPath } from '../../utils/RouterUtils';
 import { serviceTypeLogo } from '../../utils/ServiceUtils';
 import { getTagsWithoutTier, getTierTags } from '../../utils/TableUtils';
-import { showErrorToast } from '../../utils/ToastUtils';
+import { showErrorToast, showSuccessToast } from '../../utils/ToastUtils';
 import ActivityFeedList from '../ActivityFeed/ActivityFeedList/ActivityFeedList';
 import ActivityThreadPanel from '../ActivityFeed/ActivityThreadPanel/ActivityThreadPanel';
 import { CustomPropertyTable } from '../common/CustomPropertyTable/CustomPropertyTable';
@@ -173,7 +176,7 @@ const MlModelDetail: FC<MlModelDetailProp> = ({
 
   const mlModelPageInfo: ExtraInfo[] = [
     {
-      key: t('label.owner'),
+      key: EntityInfo.OWNER,
       value: getOwnerValue(mlModelDetail.owner ?? ({} as EntityReference)),
       placeholderText: getEntityPlaceHolder(
         getEntityName(mlModelDetail.owner),
@@ -187,23 +190,23 @@ const MlModelDetail: FC<MlModelDetailProp> = ({
           : undefined,
     },
     {
-      key: t('label.tier'),
+      key: EntityInfo.TIER,
       value: mlModelTier?.tagFQN
         ? mlModelTier.tagFQN.split(FQN_SEPARATOR_CHAR)[1]
         : '',
     },
     {
-      key: t('label.algorithm'),
+      key: EntityInfo.ALGORITHM,
       value: mlModelDetail.algorithm,
       showLabel: true,
     },
     {
-      key: t('label.target'),
+      key: EntityInfo.TARGET,
       value: mlModelDetail.target,
       showLabel: true,
     },
     {
-      key: t('label.server'),
+      key: EntityInfo.SERVER,
       value: mlModelDetail.server,
       showLabel: true,
       isLink: true,
@@ -211,7 +214,7 @@ const MlModelDetail: FC<MlModelDetailProp> = ({
     ...(!isUndefined(mlModelDetail.dashboard)
       ? [
           {
-            key: t('label.dashboard'),
+            key: EntityInfo.DASHBOARD,
             value: getDashboardDetailsPath(
               mlModelDetail.dashboard?.fullyQualifiedName as string
             ),
@@ -373,6 +376,27 @@ const MlModelDetail: FC<MlModelDetailProp> = ({
       };
 
       settingsUpdateHandler(updatedMlModelDetails);
+    }
+  };
+
+  const handleRestoreMlmodel = async () => {
+    try {
+      await restoreMlmodel(mlModelDetail.id);
+      showSuccessToast(
+        t('message.restore-entities-success', {
+          entity: t('label.mlmodel'),
+        }),
+        // Autoclose timer
+        2000
+      );
+      refreshPage();
+    } catch (error) {
+      showErrorToast(
+        error as AxiosError,
+        t('message.restore-entities-error', {
+          entity: t('label.mlmodel'),
+        })
+      );
     }
   };
 
@@ -567,6 +591,7 @@ const MlModelDetail: FC<MlModelDetailProp> = ({
               ? onTierUpdate
               : undefined
           }
+          onRestoreEntity={handleRestoreMlmodel}
           onThreadLinkSelect={handleThreadLinkSelect}
         />
 

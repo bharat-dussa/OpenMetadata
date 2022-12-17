@@ -14,7 +14,6 @@ Generic source to build SQL connectors.
 import traceback
 from abc import ABC
 from copy import deepcopy
-from logging.config import DictConfigurator
 from typing import Iterable, Optional, Tuple
 
 from sqlalchemy.engine import Connection
@@ -28,7 +27,6 @@ from metadata.generated.schema.api.data.createDatabaseSchema import (
 )
 from metadata.generated.schema.api.data.createTable import CreateTableRequest
 from metadata.generated.schema.api.lineage.addLineage import AddLineageRequest
-from metadata.generated.schema.entity.data.databaseSchema import DatabaseSchema
 from metadata.generated.schema.entity.data.table import Table, TablePartition, TableType
 from metadata.generated.schema.entity.services.connections.metadata.openMetadataConnection import (
     OpenMetadataConnection,
@@ -40,8 +38,8 @@ from metadata.generated.schema.metadataIngestion.workflow import (
     Source as WorkflowSource,
 )
 from metadata.generated.schema.type.entityReference import EntityReference
+from metadata.ingestion.lineage.parser import LineageParser
 from metadata.ingestion.lineage.sql_lineage import (
-    clean_raw_query,
     get_lineage_by_query,
     get_lineage_via_table_entity,
 )
@@ -55,7 +53,7 @@ from metadata.ingestion.source.database.sql_column_handler import SqlColumnHandl
 from metadata.ingestion.source.database.sqlalchemy_source import SqlAlchemySource
 from metadata.utils import fqn
 from metadata.utils.connections import get_connection, test_connection
-from metadata.utils.filters import filter_by_schema, filter_by_table
+from metadata.utils.filters import filter_by_table
 from metadata.utils.helpers import calculate_execution_time_generator
 from metadata.utils.logger import ingestion_logger
 
@@ -148,21 +146,7 @@ class CommonDbSourceService(
         """
         return schema names
         """
-        for schema_name in self.get_raw_database_schema_names():
-            schema_fqn = fqn.build(
-                self.metadata,
-                entity_type=DatabaseSchema,
-                service_name=self.context.database_service.name.__root__,
-                database_name=self.context.database.name.__root__,
-                schema_name=schema_name,
-            )
-            if filter_by_schema(
-                self.source_config.schemaFilterPattern,
-                schema_fqn if self.source_config.useFqnForFiltering else schema_name,
-            ):
-                self.status.filter(schema_fqn, "Schema Filtered Out")
-                continue
-            yield schema_name
+        yield from self._get_filtered_schema_names()
 
     def yield_database_schema(
         self, schema_name: str
@@ -191,7 +175,11 @@ class CommonDbSourceService(
                 f"Table description error for table [{schema_name}.{table_name}]: {exc}"
             )
         else:
-            description = table_info["text"]
+            if hasattr(table_info, "text"):
+                description = table_info["text"]
+                # DB2 connector does not return a str type
+                if isinstance(description, list):
+                    description = description[0]
         return description
 
     def get_tables_name_and_type(self) -> Optional[Iterable[Tuple[str, str]]]:
@@ -399,20 +387,10 @@ class CommonDbSourceService(
                 schema_name=schema_name,
                 inspector=self.inspector,
             )
-            # Prevent sqllineage from modifying the logger config
-            # Disable the DictConfigurator.configure method while importing LineageRunner
-            configure = DictConfigurator.configure
-            DictConfigurator.configure = lambda _: None
-            from sqllineage.runner import (  # pylint: disable=import-outside-toplevel
-                LineageRunner,
-            )
-
-            # Reverting changes after import is done
-            DictConfigurator.configure = configure
 
             try:
-                result = LineageRunner(clean_raw_query(view_definition))
-                if result.source_tables and result.target_tables:
+                lineage_parser = LineageParser(view_definition)
+                if lineage_parser.source_tables and lineage_parser.target_tables:
                     yield from get_lineage_by_query(
                         self.metadata,
                         query=view_definition,

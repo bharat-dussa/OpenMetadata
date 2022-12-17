@@ -55,6 +55,8 @@ import org.openmetadata.schema.dataInsight.DataInsightChart;
 import org.openmetadata.schema.dataInsight.kpi.Kpi;
 import org.openmetadata.schema.entity.Bot;
 import org.openmetadata.schema.entity.Type;
+import org.openmetadata.schema.entity.alerts.Alert;
+import org.openmetadata.schema.entity.alerts.AlertAction;
 import org.openmetadata.schema.entity.data.Chart;
 import org.openmetadata.schema.entity.data.Dashboard;
 import org.openmetadata.schema.entity.data.Database;
@@ -94,7 +96,6 @@ import org.openmetadata.schema.type.TaskStatus;
 import org.openmetadata.schema.type.ThreadType;
 import org.openmetadata.schema.type.UsageDetails;
 import org.openmetadata.schema.type.UsageStats;
-import org.openmetadata.schema.type.Webhook;
 import org.openmetadata.schema.util.EntitiesCount;
 import org.openmetadata.schema.util.ServicesCount;
 import org.openmetadata.service.Entity;
@@ -182,6 +183,9 @@ public interface CollectionDAO {
   BotDAO botDAO();
 
   @CreateSqlObject
+  AlertDAO alertDAO();
+
+  @CreateSqlObject
   PolicyDAO policyDAO();
 
   @CreateSqlObject
@@ -217,14 +221,17 @@ public interface CollectionDAO {
   @CreateSqlObject
   ChangeEventDAO changeEventDAO();
 
-  @CreateSqlObject
-  WebhookDAO webhookDAO();
+  //  @CreateSqlObject
+  //  WebhookDAO webhookDAO();
 
   @CreateSqlObject
   TypeEntityDAO typeEntityDAO();
 
   @CreateSqlObject
   TestDefinitionDAO testDefinitionDAO();
+
+  @CreateSqlObject
+  AlertActionDAO alertActionDAO();
 
   @CreateSqlObject
   TestSuiteDAO testSuiteDAO();
@@ -1495,6 +1502,26 @@ public interface CollectionDAO {
     }
   }
 
+  interface AlertDAO extends EntityDAO<Alert> {
+    @Override
+    default String getTableName() {
+      return "alert_entity";
+    }
+
+    @Override
+    default Class<Alert> getEntityClass() {
+      return Alert.class;
+    }
+
+    @Override
+    default String getNameColumn() {
+      return "name";
+    }
+
+    @SqlQuery("SELECT json FROM <table>")
+    List<String> listAllAlerts(@Define("table") String table);
+  }
+
   interface ChartDAO extends EntityDAO<Chart> {
     @Override
     default String getTableName() {
@@ -1791,31 +1818,6 @@ public interface CollectionDAO {
     default String getNameColumn() {
       return "fullyQualifiedName";
     }
-  }
-
-  interface WebhookDAO extends EntityDAO<Webhook> {
-    @Override
-    default String getTableName() {
-      return "webhook_entity";
-    }
-
-    @Override
-    default Class<Webhook> getEntityClass() {
-      return Webhook.class;
-    }
-
-    @Override
-    default String getNameColumn() {
-      return "name";
-    }
-
-    @Override
-    default boolean supportsSoftDelete() {
-      return false;
-    }
-
-    @SqlQuery("SELECT json FROM <table>")
-    List<String> listAllWebhooks(@Define("table") String table);
   }
 
   interface TagCategoryDAO extends EntityDAO<TagCategory> {
@@ -2819,6 +2821,23 @@ public interface CollectionDAO {
     }
   }
 
+  interface AlertActionDAO extends EntityDAO<AlertAction> {
+    @Override
+    default String getTableName() {
+      return "alert_action_def";
+    }
+
+    @Override
+    default Class<AlertAction> getEntityClass() {
+      return AlertAction.class;
+    }
+
+    @Override
+    default String getNameColumn() {
+      return "name";
+    }
+  }
+
   interface TestCaseDAO extends EntityDAO<TestCase> {
     @Override
     default String getTableName() {
@@ -3019,6 +3038,11 @@ public interface CollectionDAO {
     void deleteAtTimestamp(
         @Bind("entityFQN") String entityFQN, @Bind("extension") String extension, @Bind("timestamp") Long timestamp);
 
+    @SqlUpdate(
+        "DELETE FROM entity_extension_time_series WHERE entityFQN = :entityFQN AND extension = :extension AND timestamp < :timestamp")
+    void deleteBeforeExclusive(
+        @Bind("entityFQN") String entityFQN, @Bind("extension") String extension, @Bind("timestamp") Long timestamp);
+
     @SqlQuery(
         "SELECT json FROM entity_extension_time_series WHERE entityFQN = :entityFQN AND jsonSchema = :jsonSchema "
             + "ORDER BY timestamp DESC LIMIT 1")
@@ -3076,7 +3100,7 @@ public interface CollectionDAO {
           .withDatabaseServiceCount(rs.getInt("databaseServiceCount"))
           .withMessagingServiceCount(rs.getInt("messagingServiceCount"))
           .withDashboardServiceCount(rs.getInt("dashboardServiceCount"))
-          .withPipelineServiceCounte(rs.getInt("pipelineServiceCount"))
+          .withPipelineServiceCount(rs.getInt("pipelineServiceCount"))
           .withMlModelServiceCount(rs.getInt("mlModelServiceCount"));
     }
   }
@@ -3090,6 +3114,7 @@ public interface CollectionDAO {
                 + "(SELECT COUNT(*) FROM pipeline_entity <cond>) as pipelineCount, "
                 + "(SELECT COUNT(*) FROM ml_model_entity <cond>) as mlmodelCount, "
                 + "(SELECT (SELECT COUNT(*) FROM database_entity <cond>) + "
+                + "(SELECT COUNT(*) FROM dbservice_entity <cond>)+"
                 + "(SELECT COUNT(*) FROM messaging_service_entity <cond>)+ "
                 + "(SELECT COUNT(*) FROM dashboard_service_entity <cond>)+ "
                 + "(SELECT COUNT(*) FROM pipeline_service_entity <cond>)+ "
@@ -3106,6 +3131,7 @@ public interface CollectionDAO {
                 + "(SELECT COUNT(*) FROM pipeline_entity <cond>) as pipelineCount, "
                 + "(SELECT COUNT(*) FROM ml_model_entity <cond>) as mlmodelCount, "
                 + "(SELECT (SELECT COUNT(*) FROM database_entity <cond>) + "
+                + "(SELECT COUNT(*) FROM dbservice_entity <cond>)+ "
                 + "(SELECT COUNT(*) FROM messaging_service_entity <cond>)+ "
                 + "(SELECT COUNT(*) FROM dashboard_service_entity <cond>)+ "
                 + "(SELECT COUNT(*) FROM pipeline_service_entity <cond>)+ "

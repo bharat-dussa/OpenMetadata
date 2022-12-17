@@ -11,10 +11,9 @@
  *  limitations under the License.
  */
 
-import { Col, Row } from 'antd';
 import { AxiosError } from 'axios';
 import classNames from 'classnames';
-import { isEmpty, isEqual, isNil, isUndefined } from 'lodash';
+import { isEqual, isNil, isUndefined } from 'lodash';
 import { ColumnJoins, EntityTags, ExtraInfo } from 'Models';
 import React, { RefObject, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +24,7 @@ import { ROUTES } from '../../constants/constants';
 import { EntityField } from '../../constants/Feeds.constants';
 import { observerOptions } from '../../constants/Mydata.constants';
 import { CSMode } from '../../enums/codemirror.enum';
-import { EntityType, FqnPart } from '../../enums/entity.enum';
+import { EntityInfo, EntityType, FqnPart } from '../../enums/entity.enum';
 import { OwnerType } from '../../enums/user.enum';
 import {
   JoinedWith,
@@ -62,7 +61,6 @@ import { CustomPropertyTable } from '../common/CustomPropertyTable/CustomPropert
 import { CustomPropertyProps } from '../common/CustomPropertyTable/CustomPropertyTable.interface';
 import Description from '../common/description/Description';
 import EntityPageInfo from '../common/entityPageInfo/EntityPageInfo';
-import ErrorPlaceHolder from '../common/error-with-placeholder/ErrorPlaceHolder';
 import TabsPane from '../common/TabsPane/TabsPane';
 import PageContainerV1 from '../containers/PageContainerV1';
 import EntityLineageComponent from '../EntityLineage/EntityLineage.component';
@@ -74,15 +72,16 @@ import {
   OperationPermission,
   ResourceEntity,
 } from '../PermissionProvider/PermissionProvider.interface';
-import SampleDataTable, {
-  SampleColumns,
-} from '../SampleDataTable/SampleDataTable.component';
+import SampleDataTable from '../SampleDataTable/SampleDataTable.component';
 import SchemaEditor from '../schema-editor/SchemaEditor';
 import SchemaTab from '../SchemaTab/SchemaTab.component';
 import TableProfilerGraph from '../TableProfiler/TableProfilerGraph.component';
 import TableProfilerV1 from '../TableProfiler/TableProfilerV1';
 import TableQueries from '../TableQueries/TableQueries';
 import { DatasetDetailsProps } from './DatasetDetails.interface';
+
+// css
+import './datasetDetails.style.less';
 
 const DatasetDetails: React.FC<DatasetDetailsProps> = ({
   entityName,
@@ -94,7 +93,6 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
   tableProfile,
   columns,
   tier,
-  sampleData,
   entityLineage,
   followTableHandler,
   unfollowTableHandler,
@@ -120,9 +118,6 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
   removeLineageHandler,
   entityLineageHandler,
   isLineageLoading,
-  isSampleDataLoading,
-  isQueriesLoading,
-  tableQueries,
   entityThread,
   isentityThreadLoading,
   postFeedHandler,
@@ -390,7 +385,7 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
 
   const extraInfo: Array<ExtraInfo> = [
     {
-      key: t('label.owner'),
+      key: EntityInfo.OWNER,
       value: getOwnerValue(owner),
       placeholderText: getEntityPlaceHolder(
         getEntityName(owner),
@@ -403,23 +398,23 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
       profileName: owner?.type === OwnerType.USER ? owner?.name : undefined,
     },
     {
-      key: t('label.tier'),
+      key: EntityInfo.TIER,
       value: tier?.tagFQN ? tier.tagFQN.split(FQN_SEPARATOR_CHAR)[1] : '',
     },
-    { key: t('label.type'), value: `${tableType}`, showLabel: true },
+    { key: EntityInfo.TYPE, value: `${tableType}`, showLabel: true },
     { value: usage },
-    { value: `${weeklyUsageCount} Queries` },
+    { value: `${weeklyUsageCount} ${t('label.query-plural')}` },
     {
-      key: t('label.column-plural'),
+      key: EntityInfo.COLUMNS,
       value:
         tableProfile && tableProfile?.columnCount
-          ? `${tableProfile.columnCount} Columns`
+          ? `${tableProfile.columnCount} ${t('label.columns-plural')}`
           : columns.length
-          ? `${columns.length} Columns`
+          ? `${columns.length} ${t('label.columns-plural')}`
           : '',
     },
     {
-      key: t('label.row-plural'),
+      key: EntityInfo.ROWS,
       value: prepareTableRowInfo(),
     },
   ];
@@ -555,29 +550,6 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
     }
   };
 
-  const getSampleDataWithType = () => {
-    const updatedColumns = sampleData?.columns?.map((column) => {
-      const matchedColumn = columns.find((col) => col.name === column);
-
-      if (matchedColumn) {
-        return {
-          name: matchedColumn.name,
-          dataType: matchedColumn.dataType,
-        };
-      } else {
-        return {
-          name: column,
-          dataType: '',
-        };
-      }
-    });
-
-    return {
-      columns: updatedColumns as SampleColumns[] | undefined,
-      rows: sampleData?.rows,
-    };
-  };
-
   const onThreadLinkSelect = (link: string, threadType?: ThreadType) => {
     setThreadLink(link);
     if (threadType) {
@@ -692,81 +664,80 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
             tabs={tabs}
           />
           <div className="tw-flex-grow tw-flex tw-flex-col tw-py-4">
-            <div className="tw-bg-white tw-flex-grow tw-p-4 tw-shadow tw-rounded-md">
-              {activeTab === 1 && (
-                <div
-                  className="tw-grid tw-grid-cols-4 tw-gap-4 tw-w-full"
-                  id="schemaDetails">
-                  <div className="tw-col-span-3">
-                    <Description
-                      description={description}
-                      entityFieldTasks={getEntityFieldThreadCounts(
-                        EntityField.DESCRIPTION,
-                        entityFieldTaskCount
-                      )}
-                      entityFieldThreads={getEntityFieldThreadCounts(
-                        EntityField.DESCRIPTION,
-                        entityFieldThreadCount
-                      )}
-                      entityFqn={datasetFQN}
-                      entityName={entityName}
-                      entityType={EntityType.TABLE}
-                      hasEditAccess={
-                        tablePermissions.EditAll ||
-                        tablePermissions.EditDescription
-                      }
-                      isEdit={isEdit}
-                      isReadOnly={deleted}
-                      owner={owner}
-                      onCancel={onCancel}
-                      onDescriptionEdit={onDescriptionEdit}
-                      onDescriptionUpdate={onDescriptionUpdate}
-                      onEntityFieldSelect={onEntityFieldSelect}
-                      onThreadLinkSelect={onThreadLinkSelect}
-                    />
-                  </div>
-                  <div className="tw-col-span-1 tw-border tw-border-main tw-rounded-md">
-                    <FrequentlyJoinedTables
-                      header="Frequently Joined Tables"
-                      tableList={getFrequentlyJoinedWithTables()}
-                    />
-                  </div>
-                  <div className="tw-col-span-full">
-                    <SchemaTab
-                      columnName={getPartialNameFromTableFQN(
-                        datasetFQN,
-                        [FqnPart['Column']],
-                        FQN_SEPARATOR_CHAR
-                      )}
-                      columns={columns}
-                      entityFieldTasks={getEntityFieldThreadCounts(
-                        EntityField.COLUMNS,
-                        entityFieldTaskCount
-                      )}
-                      entityFieldThreads={getEntityFieldThreadCounts(
-                        EntityField.COLUMNS,
-                        entityFieldThreadCount
-                      )}
-                      entityFqn={datasetFQN}
-                      hasDescriptionEditAccess={
-                        tablePermissions.EditAll ||
-                        tablePermissions.EditDescription
-                      }
-                      hasTagEditAccess={
-                        tablePermissions.EditAll || tablePermissions.EditTags
-                      }
-                      isReadOnly={deleted}
-                      joins={tableJoinData.columnJoins as ColumnJoins[]}
-                      sampleData={sampleData}
-                      tableConstraints={tableDetails.tableConstraints}
-                      onEntityFieldSelect={onEntityFieldSelect}
-                      onThreadLinkSelect={onThreadLinkSelect}
-                      onUpdate={onColumnsUpdate}
-                    />
-                  </div>
+            {activeTab === 1 && (
+              <div
+                className="tab-details-container tw-grid tw-grid-cols-4 tw-gap-4 tw-w-full"
+                id="schemaDetails">
+                <div className="tw-col-span-3">
+                  <Description
+                    description={description}
+                    entityFieldTasks={getEntityFieldThreadCounts(
+                      EntityField.DESCRIPTION,
+                      entityFieldTaskCount
+                    )}
+                    entityFieldThreads={getEntityFieldThreadCounts(
+                      EntityField.DESCRIPTION,
+                      entityFieldThreadCount
+                    )}
+                    entityFqn={datasetFQN}
+                    entityName={entityName}
+                    entityType={EntityType.TABLE}
+                    hasEditAccess={
+                      tablePermissions.EditAll ||
+                      tablePermissions.EditDescription
+                    }
+                    isEdit={isEdit}
+                    isReadOnly={deleted}
+                    owner={owner}
+                    onCancel={onCancel}
+                    onDescriptionEdit={onDescriptionEdit}
+                    onDescriptionUpdate={onDescriptionUpdate}
+                    onEntityFieldSelect={onEntityFieldSelect}
+                    onThreadLinkSelect={onThreadLinkSelect}
+                  />
                 </div>
-              )}
-              {activeTab === 2 && (
+                <div className="tw-col-span-1 tw-border tw-border-main tw-rounded-md">
+                  <FrequentlyJoinedTables
+                    header="Frequently Joined Tables"
+                    tableList={getFrequentlyJoinedWithTables()}
+                  />
+                </div>
+                <div className="tw-col-span-full">
+                  <SchemaTab
+                    columnName={getPartialNameFromTableFQN(
+                      datasetFQN,
+                      [FqnPart['Column']],
+                      FQN_SEPARATOR_CHAR
+                    )}
+                    columns={columns}
+                    entityFieldTasks={getEntityFieldThreadCounts(
+                      EntityField.COLUMNS,
+                      entityFieldTaskCount
+                    )}
+                    entityFieldThreads={getEntityFieldThreadCounts(
+                      EntityField.COLUMNS,
+                      entityFieldThreadCount
+                    )}
+                    entityFqn={datasetFQN}
+                    hasDescriptionEditAccess={
+                      tablePermissions.EditAll ||
+                      tablePermissions.EditDescription
+                    }
+                    hasTagEditAccess={
+                      tablePermissions.EditAll || tablePermissions.EditTags
+                    }
+                    isReadOnly={deleted}
+                    joins={tableJoinData.columnJoins as ColumnJoins[]}
+                    tableConstraints={tableDetails.tableConstraints}
+                    onEntityFieldSelect={onEntityFieldSelect}
+                    onThreadLinkSelect={onThreadLinkSelect}
+                    onUpdate={onColumnsUpdate}
+                  />
+                </div>
+              </div>
+            )}
+            {activeTab === 2 && (
+              <div className="tab-details-container">
                 <div
                   className="tw-py-4 tw-px-7 tw-grid tw-grid-cols-3 entity-feed-list tw--mx-7 tw--my-4"
                   id="activityfeed">
@@ -784,78 +755,69 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                   />
                   <div />
                 </div>
-              )}
-              {activeTab === 3 && (
-                <div id="sampleDataDetails">
-                  <SampleDataTable
-                    isLoading={isSampleDataLoading}
-                    sampleData={getSampleDataWithType()}
-                  />
-                </div>
-              )}
-              {activeTab === 4 && (
-                <Row className="tw-p-2" id="tablequeries">
-                  {!isEmpty(tableQueries) || isQueriesLoading ? (
-                    <Col offset={3} span={18}>
-                      <TableQueries
-                        isLoading={isQueriesLoading}
-                        queries={tableQueries}
-                      />
-                    </Col>
-                  ) : (
-                    <Col
-                      className="tw-flex tw-justify-center tw-font-medium tw-items-center tw-p-8 tw-col-span-3"
-                      span={24}>
-                      <div data-testid="no-queries">
-                        <ErrorPlaceHolder heading="queries" />
-                      </div>
-                    </Col>
-                  )}
-                </Row>
-              )}
-              {activeTab === 5 && (
-                <TableProfilerV1
-                  permissions={tablePermissions}
-                  table={tableDetails}
-                />
-              )}
-
-              {activeTab === 7 && (
                 <div
-                  className={classNames(
-                    location.pathname.includes(ROUTES.TOUR)
-                      ? 'tw-h-70vh'
-                      : 'tw-h-full'
-                  )}
-                  id="lineageDetails">
-                  <EntityLineageComponent
-                    addLineageHandler={addLineageHandler}
-                    deleted={deleted}
-                    entityLineage={entityLineage}
-                    entityLineageHandler={entityLineageHandler}
-                    entityType={EntityType.TABLE}
-                    hasEditAccess={
-                      tablePermissions.EditAll || tablePermissions.EditLineage
-                    }
-                    isLoading={isLineageLoading}
-                    isNodeLoading={isNodeLoading}
-                    lineageLeafNodes={lineageLeafNodes}
-                    loadNodeHandler={loadNodeHandler}
-                    removeLineageHandler={removeLineageHandler}
-                    onFullScreenClick={handleFullScreenClick}
-                  />
+                  data-testid="observer-element"
+                  id="observer-element"
+                  ref={elementRef as RefObject<HTMLDivElement>}>
+                  {getLoader()}
                 </div>
-              )}
-              {activeTab === 8 && Boolean(dataModel?.sql) && (
-                <div className="tw-border tw-border-main tw-rounded-md tw-py-4 tw-h-full cm-h-full">
-                  <SchemaEditor
-                    className="tw-h-full"
-                    mode={{ name: CSMode.SQL }}
-                    value={dataModel?.sql || ''}
-                  />
-                </div>
-              )}
-              {activeTab === 9 && (
+              </div>
+            )}
+            {activeTab === 3 && (
+              <div className="tab-details-container" id="sampleDataDetails">
+                <SampleDataTable tableId={tableDetails.id} />
+              </div>
+            )}
+            {activeTab === 4 && (
+              <div className="tab-details-container">
+                <TableQueries tableId={tableDetails.id} />
+              </div>
+            )}
+            {activeTab === 5 && (
+              <TableProfilerV1
+                permissions={tablePermissions}
+                tableFqn={tableDetails.fullyQualifiedName || ''}
+              />
+            )}
+
+            {activeTab === 7 && (
+              <div
+                className={classNames(
+                  'tab-details-container',
+                  location.pathname.includes(ROUTES.TOUR)
+                    ? 'tw-h-70vh'
+                    : 'tw-h-full'
+                )}
+                id="lineageDetails">
+                <EntityLineageComponent
+                  addLineageHandler={addLineageHandler}
+                  deleted={deleted}
+                  entityLineage={entityLineage}
+                  entityLineageHandler={entityLineageHandler}
+                  entityType={EntityType.TABLE}
+                  hasEditAccess={
+                    tablePermissions.EditAll || tablePermissions.EditLineage
+                  }
+                  isLoading={isLineageLoading}
+                  isNodeLoading={isNodeLoading}
+                  lineageLeafNodes={lineageLeafNodes}
+                  loadNodeHandler={loadNodeHandler}
+                  removeLineageHandler={removeLineageHandler}
+                  onFullScreenClick={handleFullScreenClick}
+                />
+              </div>
+            )}
+            {activeTab === 8 && Boolean(dataModel?.sql) && (
+              <div className="tab-details-container tw-border tw-border-main tw-rounded-md tw-py-4 tw-h-full cm-h-full">
+                <SchemaEditor
+                  className="tw-h-full"
+                  mode={{ name: CSMode.SQL }}
+                  value={dataModel?.sql || ''}
+                />
+              </div>
+            )}
+            {activeTab === 9 && (
+              <div className="tab-details-container">
                 <CustomPropertyTable
                   entityDetails={
                     tableDetails as CustomPropertyProps['entityDetails']
@@ -863,14 +825,8 @@ const DatasetDetails: React.FC<DatasetDetailsProps> = ({
                   entityType={EntityType.TABLE}
                   handleExtensionUpdate={handleExtensionUpdate}
                 />
-              )}
-              <div
-                data-testid="observer-element"
-                id="observer-element"
-                ref={elementRef as RefObject<HTMLDivElement>}>
-                {getLoader()}
               </div>
-            </div>
+            )}
           </div>
           {threadLink ? (
             <ActivityThreadPanel

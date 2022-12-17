@@ -90,16 +90,14 @@ from metadata.ingestion.ometa.mixins.tests_mixin import OMetaTestsMixin
 from metadata.ingestion.ometa.mixins.topic_mixin import OMetaTopicMixin
 from metadata.ingestion.ometa.mixins.user_mixin import OMetaUserMixin
 from metadata.ingestion.ometa.mixins.version_mixin import OMetaVersionMixin
+from metadata.ingestion.ometa.models import EntityList
 from metadata.ingestion.ometa.provider_registry import (
     InvalidAuthProviderException,
     auth_provider_registry,
 )
-from metadata.ingestion.ometa.ssl_registry import (
-    InvalidSSLVerificationException,
-    ssl_verification_registry,
-)
 from metadata.ingestion.ometa.utils import get_entity_type, model_str, ometa_logger
 from metadata.utils.secrets.secrets_manager_factory import SecretsManagerFactory
+from metadata.utils.ssl_registry import get_verify_ssl_fn
 
 logger = ometa_logger()
 
@@ -126,21 +124,6 @@ class EmptyPayloadException(Exception):
     Raise when receiving no data, even if no exception
     during the API call is received
     """
-
-
-class EntityList(Generic[T], BaseModel):
-    """
-    Pydantic Entity list model
-
-    Attributes
-        entities (List): list of entities
-        total (int):
-        after (str):
-    """
-
-    entities: List[T]
-    total: int
-    after: str = None
 
 
 class OpenMetadata(
@@ -204,20 +187,14 @@ class OpenMetadata(
 
         self._auth_provider = auth_provider_fn(self.config)
 
-        get_verify_ssl = ssl_verification_registry.registry.get(
-            self.config.verifySSL.value
-        )
-        if not get_verify_ssl:
-            raise InvalidSSLVerificationException(
-                f"Cannot find {self.config.verifySSL.value} in {ssl_verification_registry.registry}"
-            )
+        get_verify_ssl = get_verify_ssl_fn(self.config.verifySSL)
 
         client_config: ClientConfig = ClientConfig(
             base_url=self.config.hostPort,
             api_version=self.config.apiVersion,
             auth_header="Authorization",
             auth_token=self._auth_provider.get_access_token,
-            verify=get_verify_ssl(config),
+            verify=get_verify_ssl(self.config.sslConfig),
         )
         self.client = REST(client_config)
         self._use_raw_data = raw_data

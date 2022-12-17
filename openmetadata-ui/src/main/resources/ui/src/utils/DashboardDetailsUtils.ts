@@ -11,28 +11,31 @@
  *  limitations under the License.
  */
 
+import i18next from 'i18next';
 import { TabSpecificField } from '../enums/entity.enum';
+import { ChartType } from '../pages/DashboardDetailsPage/DashboardDetailsPage.component';
+import { sortTagsCaseInsensitive } from './CommonUtils';
 
 export const defaultFields = `${TabSpecificField.OWNER}, ${TabSpecificField.FOLLOWERS}, ${TabSpecificField.TAGS},
 ${TabSpecificField.USAGE_SUMMARY}, ${TabSpecificField.CHARTS},${TabSpecificField.EXTENSION}`;
 
 export const dashboardDetailsTabs = [
   {
-    name: 'Details',
+    name: i18next.t('label.details'),
     path: 'details',
   },
   {
-    name: 'Activity Feeds & Tasks',
+    name: i18next.t('label.activity-feed-and-task-plural'),
     path: 'activity_feed',
     field: TabSpecificField.ACTIVITY_FEED,
   },
   {
-    name: 'Lineage',
+    name: i18next.t('label.lineage'),
     path: 'lineage',
     field: TabSpecificField.LINEAGE,
   },
   {
-    name: 'Custom Properties',
+    name: i18next.t('label.custom-properties'),
     path: 'custom_properties',
   },
 ];
@@ -63,4 +66,11 @@ export const getCurrentDashboardTab = (tab: string) => {
   }
 
   return currentTab;
+};
+
+export const sortTagsForCharts = (charts: ChartType[]) => {
+  return charts.map((chart) => ({
+    ...chart,
+    tags: sortTagsCaseInsensitive(chart.tags || []),
+  }));
 };

@@ -34,6 +34,9 @@ jest.mock('react-router-dom', () => ({
   Link: jest
     .fn()
     .mockImplementation(({ children }) => <a href="#">{children}</a>),
+  useParams: jest.fn().mockReturnValue({
+    datasetFQN: 'sample_data.ecommerce_db.shopify.dim_address',
+  }),
 }));
 
 // mock internal imports
@@ -51,6 +54,7 @@ jest.mock('./Component/ColumnProfileTable', () => {
 jest.mock('../../utils/CommonUtils', () => ({
   formatNumberWithComma: jest.fn(),
   formTwoDigitNmber: jest.fn(),
+  getStatisticsDisplayValue: jest.fn(),
 }));
 
 jest.mock('../../axiosAPIs/testAPI', () => ({
@@ -60,7 +64,7 @@ jest.mock('../../axiosAPIs/testAPI', () => ({
 }));
 
 const mockProps: TableProfilerProps = {
-  table: MOCK_TABLE,
+  tableFqn: MOCK_TABLE.fullyQualifiedName || '',
   permissions: {
     Create: true,
     Delete: true,

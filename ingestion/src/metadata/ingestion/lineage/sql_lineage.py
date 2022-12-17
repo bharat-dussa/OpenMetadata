@@ -12,7 +12,6 @@
 Helper functions to handle SQL lineage operations
 """
 import traceback
-from logging.config import DictConfigurator
 from typing import Any, Iterable, Iterator, List, Optional
 
 from metadata.generated.schema.api.lineage.addLineage import AddLineageRequest
@@ -23,62 +22,15 @@ from metadata.generated.schema.type.entityLineage import (
     LineageDetails,
 )
 from metadata.generated.schema.type.entityReference import EntityReference
+from metadata.ingestion.lineage.parser import LineageParser
 from metadata.ingestion.ometa.ometa_api import OpenMetadata
 from metadata.utils import fqn
-from metadata.utils.helpers import insensitive_match, insensitive_replace
+from metadata.utils.fqn import build_es_fqn_search_string
 from metadata.utils.logger import utils_logger
 from metadata.utils.lru_cache import LRUCache
 
-# Prevent sqllineage from modifying the logger config
-# Disable the DictConfigurator.configure method while importing LineageRunner
-configure = DictConfigurator.configure
-DictConfigurator.configure = lambda _: None
-from sqllineage.runner import LineageRunner  # pylint: disable=wrong-import-position
-
-# Reverting changes after import is done
-DictConfigurator.configure = configure
-
 logger = utils_logger()
 LRU_CACHE_SIZE = 4096
-
-
-def clean_raw_query(raw_query: str) -> str:
-    """
-    Given a raw query from any input (e.g., view definition,
-    query from logs, etc.), perform a cleaning step
-    before passing it to the LineageRunner
-    """
-    clean_query = insensitive_replace(
-        raw_str=raw_query,
-        to_replace=" copy grants ",  # snowflake specific
-        replace_by=" ",  # remove it as it does not add any value to lineage
-    )
-
-    clean_query = insensitive_replace(
-        raw_str=clean_query.strip(),
-        to_replace="\n",  # remove line breaks
-        replace_by=" ",
-    )
-
-    if insensitive_match(clean_query, ".*merge into .*when matched.*"):
-        clean_query = insensitive_replace(
-            raw_str=clean_query,
-            to_replace="when matched.*",  # merge into queries specific
-            replace_by="",  # remove it as LineageRunner is not able to perform the lineage
-        )
-
-    return clean_query.strip()
-
-
-def split_raw_table_name(database: str, raw_name: str) -> dict:
-    database_schema = None
-    if "." in raw_name:
-        # pylint: disable=unbalanced-tuple-unpacking
-        database_schema, table = fqn.split(raw_name)[-2:]
-        # pylint: enable=unbalanced-tuple-unpacking
-        if database_schema == "<default>":
-            database_schema = None
-    return {"database": database, "database_schema": database_schema, "table": table}
 
 
 def get_column_fqn(table_entity: Table, column: str) -> Optional[str]:
@@ -113,20 +65,33 @@ def search_table_entities(
     if search_tuple in search_cache:
         return search_cache.get(search_tuple)
     try:
-        table_fqns = fqn.build(
-            metadata,
-            entity_type=Table,
-            service_name=service_name,
-            database_name=database,
-            schema_name=database_schema,
-            table_name=table,
-            fetch_multiple_entities=True,
-        )
         table_entities: Optional[List[Table]] = []
-        for table_fqn in table_fqns or []:
-            table_entity: Table = metadata.get_by_name(Table, fqn=table_fqn)
-            if table_entity:
-                table_entities.append(table_entity)
+        # search on ES first
+        fqn_search_string = build_es_fqn_search_string(
+            database, database_schema, service_name, table
+        )
+        es_result_entities = metadata.es_search_from_fqn(
+            entity_type=Table,
+            fqn_search_string=fqn_search_string,
+        )
+        if es_result_entities:
+            table_entities = es_result_entities
+        else:
+            # build fqns without searching on ES
+            table_fqns = fqn.build(
+                metadata,
+                entity_type=Table,
+                service_name=service_name,
+                database_name=database,
+                schema_name=database_schema,
+                table_name=table,
+                fetch_multiple_entities=True,
+                skip_es_search=True,
+            )
+            for table_fqn in table_fqns or []:
+                table_entity: Table = metadata.get_by_name(Table, fqn=table_fqn)
+                if table_entity:
+                    table_entities.append(table_entity)
         search_cache.put(search_tuple, table_entities)
         return table_entities
     except Exception as exc:
@@ -173,15 +138,6 @@ def get_table_entities_from_query(
         database=database_name,
         database_schema=database_schema,
         table=table,
-    ) or (
-        table
-        and search_table_entities(
-            metadata=metadata,
-            service_name=service_name,
-            database=database_name,
-            database_schema=database_schema,
-            table=table.upper(),
-        )
     )
 
     if table_entities:
@@ -193,15 +149,6 @@ def get_table_entities_from_query(
         database=database_query,
         database_schema=schema_query,
         table=table,
-    ) or (
-        table
-        and search_table_entities(
-            metadata=metadata,
-            service_name=service_name,
-            database=database_query,
-            database_schema=schema_query,
-            table=table.upper(),
-        )
     )
 
     if table_entities:
@@ -378,13 +325,13 @@ def get_lineage_by_query(
 
     try:
         logger.debug(f"Running lineage with query: {query}")
-        result = LineageRunner(clean_raw_query(query))
+        lineage_parser = LineageParser(query)
 
-        raw_column_lineage = result.get_column_lineage()
+        raw_column_lineage = lineage_parser.column_lineage
         column_lineage.update(populate_column_lineage_map(raw_column_lineage))
 
-        for intermediate_table in result.intermediate_tables:
-            for source_table in result.source_tables:
+        for intermediate_table in lineage_parser.intermediate_tables:
+            for source_table in lineage_parser.source_tables:
                 yield from _create_lineage_by_table_name(
                     metadata,
                     from_table=str(source_table),
@@ -395,7 +342,7 @@ def get_lineage_by_query(
                     query=query,
                     column_lineage_map=column_lineage,
                 )
-            for target_table in result.target_tables:
+            for target_table in lineage_parser.target_tables:
                 yield from _create_lineage_by_table_name(
                     metadata,
                     from_table=str(intermediate_table),
@@ -406,9 +353,9 @@ def get_lineage_by_query(
                     query=query,
                     column_lineage_map=column_lineage,
                 )
-        if not result.intermediate_tables:
-            for target_table in result.target_tables:
-                for source_table in result.source_tables:
+        if not lineage_parser.intermediate_tables:
+            for target_table in lineage_parser.target_tables:
+                for source_table in lineage_parser.source_tables:
                     yield from _create_lineage_by_table_name(
                         metadata,
                         from_table=str(source_table),
@@ -452,10 +399,10 @@ def get_lineage_via_table_entity(
 
     try:
         logger.debug(f"Getting lineage via table entity using query: {query}")
-        parser = LineageRunner(clean_raw_query(query))
+        lineage_parser = LineageParser(query)
         to_table_name = table_entity.name.__root__
 
-        for from_table_name in parser.source_tables:
+        for from_table_name in lineage_parser.source_tables:
             yield from _create_lineage_by_table_name(
                 metadata,
                 from_table=str(from_table_name),

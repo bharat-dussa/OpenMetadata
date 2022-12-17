@@ -42,11 +42,15 @@ export const DATA_QUALITY_SAMPLE_DATA_TABLE = {
   entity: MYDATA_SUMMARY_OPTIONS.tables,
   serviceName: 'sample_data',
   testCaseName: 'column_value_max_to_be_between',
+  testSuiteName: "critical_metrics_suite",
+  sqlTestCase: "tableCustomSQLQuery",
+  sqlQuery: "Select * from dim_address"
 };
 
 export const SEARCH_ENTITY_TABLE = {
   table_1: {
     term: 'raw_customer',
+    displayName: 'raw_customer',
     entity: MYDATA_SUMMARY_OPTIONS.tables,
     serviceName: 'sample_data',
   },
@@ -65,6 +69,7 @@ export const SEARCH_ENTITY_TABLE = {
 export const SEARCH_ENTITY_TOPIC = {
   topic_1: {
     term: 'shop_products',
+    displayName: 'shop_products',
     entity: MYDATA_SUMMARY_OPTIONS.topics,
     serviceName: 'sample_kafka',
   },
@@ -78,6 +83,7 @@ export const SEARCH_ENTITY_TOPIC = {
 export const SEARCH_ENTITY_DASHBOARD = {
   dashboard_1: {
     term: 'Slack Dashboard',
+    displayName: 'Slack Dashboard',
     entity: MYDATA_SUMMARY_OPTIONS.dashboards,
     serviceName: 'sample_superset',
   },
@@ -220,7 +226,7 @@ export const service = {
   name: 'Glue',
   description: 'This is a Glue service',
   newDescription: 'This is updated Glue service description',
-  Owner: 'Aaron Johnson',
+  Owner: 'admin',
 };
 
 export const SERVICE_TYPE = {

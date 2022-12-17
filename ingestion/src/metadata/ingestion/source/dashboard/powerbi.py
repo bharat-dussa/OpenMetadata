@@ -60,8 +60,7 @@ class PowerbiSource(DashboardServiceSource):
 
     def prepare(self):
         # fetch all the workspace ids
-        workspaces_data = self.client.fetch_all_workspaces()
-        workspaces = workspaces_data.get("value")
+        workspaces = self.client.fetch_all_workspaces()
         if workspaces:
             workspace_id_list = [workspace.get("id") for workspace in workspaces]
 
@@ -128,11 +127,11 @@ class PowerbiSource(DashboardServiceSource):
         """
         return self.context.workspace.get("dashboards")
 
-    def get_dashboard_name(self, dashboard_details: dict) -> str:
+    def get_dashboard_name(self, dashboard: dict) -> str:
         """
         Get Dashboard Name
         """
-        return dashboard_details["displayName"]
+        return dashboard["displayName"]
 
     def get_dashboard_details(self, dashboard: dict) -> dict:
         """

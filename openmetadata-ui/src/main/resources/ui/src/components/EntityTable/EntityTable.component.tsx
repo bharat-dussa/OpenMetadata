@@ -652,7 +652,7 @@ const EntityTable = ({
         render: renderDescription,
       },
       {
-        title: t('label.tags'),
+        title: t('label.tag-plural'),
         dataIndex: 'tags',
         key: 'tags',
         accessor: 'tags',
@@ -703,9 +703,9 @@ const EntityTable = ({
       {editColumn && (
         <ModalWithMarkdownEditor
           visible
-          header={t('label.edit-column', {
-            columnName: editColumn.column.name,
-          })}
+          header={`${t('label.edit-entity', { entity: t('label.column') })}: "${
+            editColumn.column.name
+          }"`}
           placeholder={t('label.enter-column-description')}
           value={editColumn.column.description as string}
           onCancel={closeEditColumnModal}

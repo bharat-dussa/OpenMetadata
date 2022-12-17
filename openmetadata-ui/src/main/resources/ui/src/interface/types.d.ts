@@ -17,7 +17,7 @@ declare module 'Models' {
   import { TagLabel } from '../generated/type/tagLabel';
   import { Paging } from './../generated/type/paging';
 
-  export interface RestoreEntitiesRequestType {
+  export interface RestoreRequestType {
     id: string;
   }
 
@@ -543,11 +543,4 @@ declare module 'Models' {
     id: string;
     state: string;
   }
-
-  export type EntityType =
-    | 'tables'
-    | 'topics'
-    | 'dashboards'
-    | 'pipelines'
-    | 'mlmodels';
 }

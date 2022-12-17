@@ -11,7 +11,6 @@
 """Metabase source module"""
 
 import traceback
-from logging.config import DictConfigurator
 from typing import Iterable, List, Optional
 
 import requests
@@ -22,7 +21,6 @@ from metadata.generated.schema.api.lineage.addLineage import AddLineageRequest
 from metadata.generated.schema.entity.data.dashboard import (
     Dashboard as LineageDashboard,
 )
-from metadata.generated.schema.entity.data.table import Table
 from metadata.generated.schema.entity.services.connections.dashboard.metabaseConnection import (
     MetabaseConnection,
 )
@@ -34,22 +32,14 @@ from metadata.generated.schema.metadataIngestion.workflow import (
 )
 from metadata.generated.schema.type.entityReference import EntityReference
 from metadata.ingestion.api.source import InvalidSourceException
-from metadata.ingestion.lineage.sql_lineage import (
-    clean_raw_query,
-    search_table_entities,
-)
+from metadata.ingestion.lineage.parser import LineageParser
+from metadata.ingestion.lineage.sql_lineage import search_table_entities
 from metadata.ingestion.source.dashboard.dashboard_service import DashboardServiceSource
 from metadata.ingestion.source.database.common_db_source import SQLSourceStatus
 from metadata.utils import fqn
 from metadata.utils.filters import filter_by_chart
 from metadata.utils.helpers import get_standard_chart_type, replace_special_with
 from metadata.utils.logger import ingestion_logger
-
-# Prevent sqllineage from modifying the logger config
-# Disable the DictConfigurator.configure method while importing LineageRunner
-configure = DictConfigurator.configure
-DictConfigurator.configure = lambda _: None
-from sqllineage.runner import LineageRunner  # pylint: disable=C0413
 
 HEADERS = {"Content-Type": "application/json", "Accept": "*/*"}
 
@@ -92,11 +82,11 @@ class MetabaseSource(DashboardServiceSource):
             return resp_dashboards.json()
         return []
 
-    def get_dashboard_name(self, dashboard_details: dict) -> str:
+    def get_dashboard_name(self, dashboard: dict) -> str:
         """
         Get Dashboard Name
         """
-        return dashboard_details["name"]
+        return dashboard["name"]
 
     def get_dashboard_details(self, dashboard: dict) -> dict:
         """
@@ -143,7 +133,8 @@ class MetabaseSource(DashboardServiceSource):
         for chart in charts:
             try:
                 chart_details = chart["card"]
-
+                if "id" not in chart_details:
+                    continue
                 chart_url = (
                     f"/question/{chart_details['id']}-"
                     f"{replace_special_with(raw=chart_details['name'].lower(), replacement='-')}"
@@ -241,34 +232,49 @@ class MetabaseSource(DashboardServiceSource):
         resp_database = self.req_get(f"/api/database/{chart_details['database_id']}")
         if resp_database.status_code == 200:
             database = resp_database.json()
-
-            query = chart_details["dataset_query"]["native"]["query"]
-            table_list = LineageRunner(clean_raw_query(query))
-            for table in table_list.source_tables:
+            query = (
+                chart_details.get("dataset_query", {})
+                .get("native", {})
+                .get("query", "")
+            )
+            lineage_parser = LineageParser(query)
+            for table in lineage_parser.source_tables:
                 database_schema_name, table = fqn.split(str(table))[-2:]
                 database_schema_name = (
                     None
                     if database_schema_name == "<default>"
                     else database_schema_name
                 )
-                from_entities = search_table_entities(
-                    metadata=self.metadata,
-                    database=database["details"]["db"],
-                    service_name=db_service_name,
-                    database_schema=database_schema_name,
-                    table=table,
+                database = database.get("details", {}).get("db", None)
+                if database:
+                    from_entities = search_table_entities(
+                        metadata=self.metadata,
+                        database=database,
+                        service_name=db_service_name,
+                        database_schema=database_schema_name,
+                        table=table,
+                    )
+                else:
+                    from_entities = search_table_entities(
+                        metadata=self.metadata,
+                        service_name=db_service_name,
+                        database=None,
+                        database_schema=database_schema_name,
+                        table=table,
+                    )
+
+                to_fqn = fqn.build(
+                    self.metadata,
+                    entity_type=LineageDashboard,
+                    service_name=self.config.serviceName,
+                    dashboard_name=dashboard_name,
                 )
+                to_entity = self.metadata.get_by_name(
+                    entity=LineageDashboard,
+                    fqn=to_fqn,
+                )
+
                 for from_entity in from_entities:
-                    to_fqn = fqn.build(
-                        self.metadata,
-                        entity_type=LineageDashboard,
-                        service_name=self.config.serviceName,
-                        dashboard_name=dashboard_name,
-                    )
-                    to_entity = self.metadata.get_by_name(
-                        entity=LineageDashboard,
-                        fqn=to_fqn,
-                    )
                     yield self._get_add_lineage_request(
                         to_entity=to_entity, from_entity=from_entity
                     )
@@ -279,18 +285,24 @@ class MetabaseSource(DashboardServiceSource):
         resp_tables = self.req_get(f"/api/table/{chart_details['table_id']}")
         if resp_tables.status_code == 200:
             table = resp_tables.json()
-            from_fqn = fqn.build(
-                self.metadata,
-                entity_type=Table,
-                service_name=db_service_name,
-                database_name=table["db"]["details"]["db"],
-                schema_name=table.get("schema"),
-                table_name=table.get("display_name"),
-            )
-            from_entity = self.metadata.get_by_name(
-                entity=Table,
-                fqn=from_fqn,
-            )
+            database_name = table.get("db", {}).get("details", {}).get("db", None)
+            if database_name:
+                from_entities = search_table_entities(
+                    metadata=self.metadata,
+                    database=database_name,
+                    service_name=db_service_name,
+                    database_schema=table.get("schema"),
+                    table=table.get("display_name"),
+                )
+            else:
+                from_entities = search_table_entities(
+                    metadata=self.metadata,
+                    service_name=db_service_name,
+                    database=None,
+                    database_schema=table.get("schema"),
+                    table=table.get("display_name"),
+                )
+
             to_fqn = fqn.build(
                 self.metadata,
                 entity_type=LineageDashboard,
@@ -301,6 +313,8 @@ class MetabaseSource(DashboardServiceSource):
                 entity=LineageDashboard,
                 fqn=to_fqn,
             )
-            yield self._get_add_lineage_request(
-                to_entity=to_entity, from_entity=from_entity
-            )
+
+            for from_entity in from_entities:
+                yield self._get_add_lineage_request(
+                    to_entity=to_entity, from_entity=from_entity
+                )

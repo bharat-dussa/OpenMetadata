@@ -12,11 +12,12 @@
 import enum
 import traceback
 
-from clickhouse_sqlalchemy.drivers.base import ClickHouseDialect
+from clickhouse_sqlalchemy.drivers.base import ClickHouseDialect, ischema_names
 from clickhouse_sqlalchemy.drivers.http.transport import RequestsTransport, _get_type
 from clickhouse_sqlalchemy.drivers.http.utils import parse_tsv
 from sqlalchemy import types as sqltypes
 from sqlalchemy.engine import reflection
+from sqlalchemy.sql.sqltypes import String
 from sqlalchemy.util import warn
 
 from metadata.generated.schema.entity.services.connections.database.clickhouseConnection import (
@@ -35,10 +36,17 @@ from metadata.utils.logger import ingestion_logger
 logger = ingestion_logger()
 
 
+class AggregateFunction(String):
+
+    __visit_name__ = "AggregateFunction"
+
+
 @reflection.cache
 def _get_column_type(
     self, name, spec
 ):  # pylint: disable=protected-access,too-many-branches,too-many-return-statements
+    ischema_names.update({"AggregateFunction": AggregateFunction})
+    ClickHouseDialect.ischema_names = ischema_names
     if spec.startswith("Array"):
         inner = spec[6:-1]
         coltype = self.ischema_names["_array"]
@@ -95,6 +103,8 @@ def _get_column_type(
         coltype = self.ischema_names["Decimal"]
         return coltype(*self._parse_decimal_params(spec))
 
+    if spec.lower().startswith("aggregatefunction"):
+        return self.ischema_names["AggregateFunction"]
     try:
         return self.ischema_names[spec]
     except KeyError:
@@ -145,13 +155,6 @@ def get_pk_constraint(
 
 
 @reflection.cache
-def get_table_comment(
-    self, connection, table_name, schema=None, **kw  # pylint: disable=unused-argument
-):
-    return {"text": None}
-
-
-@reflection.cache
 def get_view_definition(
     self, connection, view_name, schema=None, **kw  # pylint: disable=unused-argument
 ):
@@ -174,7 +177,6 @@ ClickHouseDialect.get_pk_constraint = get_pk_constraint
 ClickHouseDialect._get_column_type = (  # pylint: disable=protected-access
     _get_column_type
 )
-ClickHouseDialect.get_table_comment = get_table_comment
 RequestsTransport.execute = execute
 ClickHouseDialect.get_view_definition = get_view_definition
 

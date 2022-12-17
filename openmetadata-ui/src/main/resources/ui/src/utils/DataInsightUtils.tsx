@@ -29,6 +29,11 @@ import React from 'react';
 import { ListItem, ListValues } from 'react-awesome-query-builder';
 import { LegendProps, Surface } from 'recharts';
 import {
+  GRAYED_OUT_COLOR,
+  PLACEHOLDER_ROUTE_TAB,
+  ROUTES,
+} from '../constants/constants';
+import {
   ENTITIES_SUMMARY_LIST,
   KPI_DATE_PICKER_FORMAT,
   WEB_SUMMARY_LIST,
@@ -44,6 +49,7 @@ import { TotalEntitiesByTier } from '../generated/dataInsight/type/totalEntities
 import {
   ChartValue,
   DataInsightChartTooltipProps,
+  KpiDates,
 } from '../interface/data-insight.interface';
 import { pluralize } from './CommonUtils';
 import { getFormattedDateFromMilliSeconds } from './TimeUtils';
@@ -54,7 +60,11 @@ const checkIsPercentageGraph = (dataInsightChartType: DataInsightChartType) =>
     DataInsightChartType.PercentageOfEntitiesWithOwnerByType,
   ].includes(dataInsightChartType);
 
-export const renderLegend = (legendData: LegendProps, latest: string) => {
+export const renderLegend = (
+  legendData: LegendProps,
+  latest: string,
+  activeKeys = [] as string[]
+) => {
   const { payload = [] } = legendData;
 
   return (
@@ -63,21 +73,44 @@ export const renderLegend = (legendData: LegendProps, latest: string) => {
         Latest
       </Typography.Text>
       <Typography
-        className="font-semibold text-2xl"
-        style={{ margin: '5px 0px' }}>
+        className="font-bold text-lg"
+        style={{ margin: '0px 0px 16px' }}>
         {latest}
       </Typography>
       <ul className="mr-2">
-        {payload.map((entry, index) => (
-          <li
-            className="recharts-legend-item d-flex items-center"
-            key={`item-${index}`}>
-            <Surface className="mr-2" height={14} version="1.1" width={14}>
-              <rect fill={entry.color} height="14" rx="2" width="14" />
-            </Surface>
-            <span>{entry.value}</span>
-          </li>
-        ))}
+        {payload.map((entry, index) => {
+          const isActive =
+            activeKeys.length === 0 || activeKeys.includes(entry.value);
+
+          return (
+            <li
+              className="recharts-legend-item d-flex items-center m-t-xss cursor-pointer"
+              key={`item-${index}`}
+              onClick={(e) =>
+                legendData.onClick && legendData.onClick({ ...entry, ...e })
+              }
+              onMouseEnter={(e) =>
+                legendData.onMouseEnter &&
+                legendData.onMouseEnter({ ...entry, ...e })
+              }
+              onMouseLeave={(e) =>
+                legendData.onMouseLeave &&
+                legendData.onMouseLeave({ ...entry, ...e })
+              }>
+              <Surface className="mr-2" height={14} version="1.1" width={14}>
+                <rect
+                  fill={isActive ? entry.color : GRAYED_OUT_COLOR}
+                  height="14"
+                  rx="2"
+                  width="14"
+                />
+              </Surface>
+              <span style={{ color: isActive ? 'inherit' : GRAYED_OUT_COLOR }}>
+                {entry.value}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </>
   );
@@ -216,7 +249,7 @@ const getLatestPercentage = (
       if (timestamp) {
         return {
           ...raw,
-          timestamp: getFormattedDateFromMilliSeconds(raw.timestamp ?? 0),
+          timestamp,
         };
       }
 
@@ -334,8 +367,6 @@ export const getGraphDataByEntityType = (
   const graphData = prepareGraphData(timestamps, filteredData);
   const latestData = last(graphData);
 
-  getLatestPercentage(rawData, dataInsightChartType);
-
   return {
     data: graphData,
     entities,
@@ -368,7 +399,7 @@ export const getGraphDataByTierType = (rawData: TotalEntitiesByTier[]) => {
 
       return {
         timestamp: timestamp,
-        [tiering]: data.entityCount,
+        [tiering]: (data?.entityCountFraction || 0) * 100,
       };
     }
 
@@ -392,13 +423,21 @@ export const getTeamFilter = (suggestionValues: ListValues = []) => {
   }));
 };
 
-export const getFormattedActiveUsersData = (activeUsers: DailyActiveUsers[]) =>
-  activeUsers.map((user) => ({
+export const getFormattedActiveUsersData = (
+  activeUsers: DailyActiveUsers[]
+) => {
+  const formattedData = activeUsers.map((user) => ({
     ...user,
     timestamp: user.timestamp
       ? getFormattedDateFromMilliSeconds(user.timestamp)
       : '',
   }));
+
+  return {
+    data: formattedData,
+    total: last(formattedData)?.activeUsers,
+  };
+};
 
 export const getEntitiesChartSummary = (
   chartResults: (DataInsightChartResult | undefined)[]
@@ -518,4 +557,14 @@ export const getKpiResultFeedback = (day: number, isTargetMet: boolean) => {
   } else {
     return t('label.day-left', { day: pluralize(day, 'day') });
   }
+};
+
+export const getDataInsightPathWithFqn = (fqn: string) =>
+  ROUTES.DATA_INSIGHT_WITH_TAB.replace(PLACEHOLDER_ROUTE_TAB, fqn);
+
+export const getKPIFormattedDates = (kpiDates: KpiDates): KpiDates => {
+  return {
+    startDate: `${kpiDates.startDate} 00:00`,
+    endDate: `${kpiDates.endDate} 23:59`,
+  };
 };

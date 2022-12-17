@@ -14,11 +14,10 @@
 import { Button as AntdButton, Dropdown, Space } from 'antd';
 import Tooltip, { RenderFunction } from 'antd/lib/tooltip';
 import classNames from 'classnames';
-import { isString, isUndefined } from 'lodash';
+import { isString, isUndefined, toLower } from 'lodash';
 import { ExtraInfo } from 'Models';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GROUP_TEAM_TYPE_CHANGE_MSG } from '../../../constants/HelperTextUtil';
 import { Dashboard } from '../../../generated/entity/data/dashboard';
 import { Table } from '../../../generated/entity/data/table';
 import { TeamType } from '../../../generated/entity/teams/team';
@@ -139,7 +138,7 @@ const EntitySummaryDetails = ({
             )
           ) : (
             <>
-              {t('label.no-entity', { entity: 'Owner' })}
+              {t('label.no-entity', { entity: t('label.owner') })}
               <span
                 data-testid={`edit-${data.key}-icon`}
                 onClick={() => setShow(!show)}>
@@ -156,7 +155,7 @@ const EntitySummaryDetails = ({
         retVal =
           !displayVal || displayVal === '--' ? (
             <>
-              {t('label.no-entity', { entity: 'Tier' })}
+              {t('label.no-entity', { entity: t('label.tier') })}
               <Dropdown
                 overlay={
                   <TierCard
@@ -199,9 +198,11 @@ const EntitySummaryDetails = ({
             {data.key
               ? displayVal
                 ? data.showLabel
-                  ? `${data.key}: `
+                  ? `${t(`label.${toLower(data.key)}`)} : `
                   : null
-                : `${t('label.no-entity', { entity: data.key })}`
+                : `${t('label.no-entity', {
+                    entity: t(`label.${toLower(data.key)}`),
+                  })}`
               : null}
           </>
         );
@@ -252,11 +253,15 @@ const EntitySummaryDetails = ({
                 <InfoIcon
                   content={
                     displayVal
-                      ? `This Entity is Owned by ${displayVal} ${
-                          !isUndefined(userDetails)
-                            ? `and followed team owned by ${userDetails.ownerName}`
-                            : ''
-                        }`
+                      ? `${t('message.entity-owned-by-name', {
+                          entityOwner: displayVal ?? '',
+                        })}
+                        
+                        ${t('message.and-followed-owned-by-name', {
+                          userName: !isUndefined(userDetails)
+                            ? userDetails.ownerName
+                            : '',
+                        })}`
                       : ''
                   }
                 />
@@ -335,7 +340,9 @@ const EntitySummaryDetails = ({
                 <Tooltip
                   placement="bottom"
                   title={
-                    isGroupType ? GROUP_TEAM_TYPE_CHANGE_MSG : 'Edit Team Type'
+                    isGroupType
+                      ? t('message.group-team-type-change-message')
+                      : t('label.edit-team-type')
                   }>
                   <AntdButton
                     className={isGroupType ? 'tw-opacity-50' : ''}
