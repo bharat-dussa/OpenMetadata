@@ -702,6 +702,7 @@ const EntityTable = ({
       />
       {editColumn && (
         <ModalWithMarkdownEditor
+          visible
           header={`${t('label.edit-entity', { entity: t('label.column') })}: "${
             editColumn.column.name
           }"`}
