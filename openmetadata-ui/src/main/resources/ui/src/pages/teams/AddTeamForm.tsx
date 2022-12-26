@@ -128,7 +128,7 @@ const AddTeamForm: React.FC<AddTeamFormType> = ({
               validator: (_, value) => {
                 if (!isUrlFriendlyName(value)) {
                   return Promise.reject(
-                    t('label.special-character-not-allowed')
+                    t('message.special-character-not-allowed')
                   );
                 }
                 if (
@@ -139,7 +139,7 @@ const AddTeamForm: React.FC<AddTeamFormType> = ({
                   )
                 ) {
                   return Promise.reject(
-                    t('label.entity-already-exists', {
+                    t('message.entity-already-exists', {
                       entity: t('label.name'),
                     })
                   );
@@ -165,14 +165,14 @@ const AddTeamForm: React.FC<AddTeamFormType> = ({
           ]}>
           <Input
             data-testid="display-name"
-            placeholder={t('label.enter-display-name')}
+            placeholder={t('message.enter-display-name')}
           />
         </Form.Item>
         <Form.Item label={t('label.team-type')} name="teamType">
           <Select
             data-testid="team-selector"
             options={teamTypeOptions}
-            placeholder={t('label.select-team')}
+            placeholder={t('message.select-team')}
           />
         </Form.Item>
         <Form.Item
