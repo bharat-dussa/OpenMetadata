@@ -121,7 +121,7 @@ const PageViewsByEntitiesChart: FC<Props> = ({ chartFilter, selectedDays }) => {
       title={
         <>
           <Typography.Title level={5}>
-            {t('label.page-views-by-entities')}
+            {t('label.page-views-by-data-assets')}
           </Typography.Title>
           <Typography.Text className="data-insight-label-text">
             {t('message.data-insight-page-views')}

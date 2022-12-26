@@ -1382,7 +1382,7 @@ const TeamDetailsV1 = ({
             setEntity(undefined);
           }}>
           <Typography.Text>
-            {t('label.sure-to-remove')}{' '}
+            {t('message.sure-to-remove')}{' '}
             {`${getEntityName(
               selectedEntity.record
             )} t('label.from-lowercase') ${getEntityName(currentTeam)}?`}

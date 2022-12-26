@@ -849,7 +849,7 @@ const TagsPage = () => {
             <FormModal
               errorData={errorDataTag}
               form={Form}
-              header={t('label.adding-new-tag', {
+              header={t('message.adding-new-tag', {
                 categoryName:
                   currentCategory?.displayName ?? currentCategory?.name,
               })}

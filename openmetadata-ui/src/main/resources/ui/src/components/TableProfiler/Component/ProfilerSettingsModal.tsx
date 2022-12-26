@@ -345,7 +345,11 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
           </Form>
         </Col>
         <Col data-testid="sql-editor-container" span={24}>
-          <p className="tw-mb-1.5">{t('label.profile-sample-query')} </p>
+          <p className="tw-mb-1.5">
+            {t('label.profile-sample-type', {
+              type: t('label.query'),
+            })}{' '}
+          </p>
           <CodeMirror
             className="profiler-setting-sql-editor"
             data-testid="profiler-setting-sql-editor"

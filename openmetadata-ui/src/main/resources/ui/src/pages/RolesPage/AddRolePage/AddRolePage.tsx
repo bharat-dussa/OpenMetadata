@@ -159,7 +159,7 @@ const AddRolePage = () => {
                 {
                   required: true,
                   message: t('message.field-text-is-required', {
-                    fieldText: t('label.at-least-one-policy'),
+                    fieldText: t('message.at-least-one-policy'),
                   }),
                 },
               ]}>

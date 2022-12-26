@@ -436,7 +436,7 @@ export const servicePageTabs = (entity: string) => [
     path: entity.toLowerCase(),
   },
   {
-    name: t('label.ingestions'),
+    name: t('label.ingestion-plural'),
     path: 'ingestions',
   },
   {
@@ -901,7 +901,7 @@ export const getServicePageTabs = (
 
   tabs.push(
     {
-      name: t('label.ingestions'),
+      name: t('label.ingestion-plural'),
       isProtected: false,
 
       position: 2,

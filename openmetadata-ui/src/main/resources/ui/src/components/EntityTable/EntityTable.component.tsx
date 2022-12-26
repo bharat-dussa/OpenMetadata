@@ -349,14 +349,14 @@ const EntityTable = ({
           destroyTooltipOnHide
           content={
             hasDescription
-              ? t('label.request-update-description')
-              : t('label.request-description')
+              ? t('message.request-update-description')
+              : t('message.request-description')
           }
           overlayClassName="ant-popover-request-description"
           trigger="hover"
           zIndex={9999}>
           <SVGIcons
-            alt={t('label.request-description')}
+            alt={t('message.request-description')}
             icon={Icons.REQUEST}
             width="16px"
           />
@@ -664,7 +664,7 @@ const EntityTable = ({
           header={`${t('label.edit-entity', { entity: t('label.column') })}: "${
             editColumn.column.name
           }"`}
-          placeholder={t('label.enter-column-description')}
+          placeholder={t('message.enter-column-description')}
           value={editColumn.column.description as string}
           visible={Boolean(editColumn)}
           onCancel={closeEditColumnModal}

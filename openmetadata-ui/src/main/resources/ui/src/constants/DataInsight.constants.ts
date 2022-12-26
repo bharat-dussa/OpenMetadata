@@ -152,7 +152,7 @@ export const WEB_CHARTS = [
 
 export const WEB_SUMMARY_LIST = [
   {
-    label: i18n.t('label.page-views-by-entities'),
+    label: i18n.t('label.page-views-by-data-assets'),
     latest: 0,
     id: DataInsightChartType.PageViewsByEntities,
   },

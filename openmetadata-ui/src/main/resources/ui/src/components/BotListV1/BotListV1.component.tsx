@@ -128,7 +128,7 @@ const BotListV1 = ({
             ? t('message.ingestion-bot-cant-be-deleted')
             : isAdminUser
             ? t('label.delete')
-            : t('label.admin-only-action');
+            : t('message.admin-only-action');
           const isDisabled = !isAdminUser || isSystemBot;
 
           return (
@@ -215,7 +215,7 @@ const BotListV1 = ({
                 title={
                   isAdminUser
                     ? t('label.add-bot')
-                    : t('label.admin-only-action')
+                    : t('message.admin-only-action')
                 }>
                 <Button
                   ghost
@@ -253,7 +253,7 @@ const BotListV1 = ({
 
           <Tooltip
             title={
-              isAdminUser ? t('label.add-bot') : t('label.admin-only-action')
+              isAdminUser ? t('label.add-bot') : t('message.admin-only-action')
             }>
             <Button
               data-testid="add-bot"

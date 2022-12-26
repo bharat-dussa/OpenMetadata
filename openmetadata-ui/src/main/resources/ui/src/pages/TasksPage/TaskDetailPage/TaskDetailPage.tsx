@@ -571,7 +571,7 @@ const TaskDetailPage = () => {
                         </span>
                       </UserPopOverCard>
                       <span className="tw-ml-1">
-                        {t('label.created-this-task')}
+                        {t('message.created-this-task-lowercase')}
                       </span>
                       <span className="tw-ml-1">
                         {toLower(

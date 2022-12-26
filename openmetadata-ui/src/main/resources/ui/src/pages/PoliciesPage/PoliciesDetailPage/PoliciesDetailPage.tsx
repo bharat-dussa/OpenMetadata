@@ -551,7 +551,7 @@ const PoliciesDetailPage = () => {
             setEntity(undefined);
           }}>
           <Typography.Text>
-            {` ${t('label.sure-to-remove')} ${getEntityName(
+            {` ${t('message.sure-to-remove')} ${getEntityName(
               selectedEntity.record
             )} ${t('label.from-lowercase')} ${getEntityName(policy)}?`}
           </Typography.Text>

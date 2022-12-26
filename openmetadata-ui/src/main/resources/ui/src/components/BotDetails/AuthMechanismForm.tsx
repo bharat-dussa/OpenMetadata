@@ -681,7 +681,7 @@ const AuthMechanismForm: FC<Props> = ({
           closable={false}
           confirmLoading={isLoading}
           okText={t('label.confirm')}
-          title={t('label.are-you-sure')}
+          title={t('message.are-you-sure')}
           visible={isConfirmationModalOpen}
           onCancel={() => setIsConfirmationModalOpen(false)}
           onOk={handleAccountEmailChange}>

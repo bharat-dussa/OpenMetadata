@@ -273,7 +273,7 @@ const SigninPage = () => {
 
                     <div className="mt-4 flex flex-center">
                       <Typography.Text className="mr-4">
-                        {t('label.new-to-the-platform')}
+                        {t('message.new-to-the-platform')}
                       </Typography.Text>
                       <Button
                         data-testid="signup"
