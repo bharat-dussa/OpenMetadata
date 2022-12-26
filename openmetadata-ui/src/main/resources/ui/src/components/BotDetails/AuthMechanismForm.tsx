@@ -485,7 +485,7 @@ const AuthMechanismForm: FC<Props> = ({
               <Input
                 data-testid="scopes"
                 name="scopes"
-                placeholder={t('label.scopes-comma-separated')}
+                placeholder={t('message.scopes-comma-separated')}
                 value={ssoClientConfig?.scopes?.join('')}
                 onChange={handleOnChange}
               />
@@ -687,7 +687,7 @@ const AuthMechanismForm: FC<Props> = ({
           onOk={handleAccountEmailChange}>
           <Typography.Text>
             {t('message.bot-email-confirmation', {
-              email: t('label.create-or-update-email-account-for-bot'),
+              email: t('message.create-or-update-email-account-for-bot'),
               botName: botData.name,
             })}
           </Typography.Text>

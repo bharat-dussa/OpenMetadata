@@ -125,7 +125,7 @@ const BotListV1 = ({
         render: (_, record) => {
           const isSystemBot = record.provider === ProviderType.System;
           const title = isSystemBot
-            ? t('label.ingestion-bot-cant-be-deleted')
+            ? t('message.ingestion-bot-cant-be-deleted')
             : isAdminUser
             ? t('label.delete')
             : t('label.admin-only-action');

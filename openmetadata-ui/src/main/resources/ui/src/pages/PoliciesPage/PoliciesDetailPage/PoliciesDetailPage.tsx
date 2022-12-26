@@ -357,7 +357,7 @@ const PoliciesDetailPage = () => {
           {isEmpty(policy) ? (
             <ErrorPlaceHolder>
               <div className="text-center">
-                <p>{`${t('label.no-policy-found')} ${fqn}`}</p>
+                <p>{`${t('label.no-policy-found-for')} ${fqn}`}</p>
                 <Button
                   size="small"
                   type="primary"
@@ -451,7 +451,7 @@ const PoliciesDetailPage = () => {
                               <Row data-testid="resources">
                                 <Col span={2}>
                                   <Typography.Text className="tw-text-grey-muted tw-mb-0">
-                                    {t('label.resources')} :
+                                    {t('label.resource-plural')} :
                                   </Typography.Text>
                                 </Col>
                                 <Col span={22}>
@@ -466,7 +466,7 @@ const PoliciesDetailPage = () => {
                               <Row data-testid="operations">
                                 <Col span={2}>
                                   <Typography.Text className="tw-text-grey-muted">
-                                    {t('label.operations')} :
+                                    {t('label.operation-plural')} :
                                   </Typography.Text>
                                 </Col>
                                 <Col span={22}>

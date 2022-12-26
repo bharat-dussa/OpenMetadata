@@ -528,7 +528,7 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
                     data-testid="interval-type"
                     disabled={!enablePartition}
                     options={INTERVAL_TYPE_OPTIONS}
-                    placeholder={t('message.select-type-required')}
+                    placeholder={t('message.select-interval-type')}
                     size="middle"
                   />
                 </Form.Item>

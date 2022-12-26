@@ -128,7 +128,7 @@ const AddTeamForm: React.FC<AddTeamFormType> = ({
               validator: (_, value) => {
                 if (!isUrlFriendlyName(value)) {
                   return Promise.reject(
-                    t('label.special-character-not-allowed')
+                    t('message.special-character-not-allowed')
                   );
                 }
                 if (
@@ -139,7 +139,7 @@ const AddTeamForm: React.FC<AddTeamFormType> = ({
                   )
                 ) {
                   return Promise.reject(
-                    t('label.entity-already-exists', {
+                    t('message.entity-already-exists', {
                       entity: t('label.name'),
                     })
                   );

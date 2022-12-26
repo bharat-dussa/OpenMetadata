@@ -301,7 +301,7 @@ const UserListV1: FC<UserListV1Props> = ({
         }}
         onOk={handleReactiveUser}>
         <p>
-          {t('label.want-to-restore')} {getEntityName(selectedUser)}?
+          {t('message.are-you-want-to-restore')} {getEntityName(selectedUser)}?
         </p>
       </Modal>
 

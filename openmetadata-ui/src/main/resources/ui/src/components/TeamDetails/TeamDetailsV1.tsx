@@ -747,7 +747,7 @@ const TeamDetailsV1 = ({
 
                 <Col className="p-t-xss">
                   <Typography.Paragraph className="text-grey-muted text-xs m-b-0 line-height-16">
-                    {t('label.access-to-collaborate')}
+                    {t('message.access-to-collaborate')}
                   </Typography.Paragraph>
                 </Col>
               </Row>

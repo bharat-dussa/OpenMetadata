@@ -21,7 +21,7 @@ export const EmptyGraphPlaceholder = () => {
   return (
     <ErrorPlaceHolder>
       <Typography.Text type="secondary">
-        {t('label.no-data-available')}
+        {t('message.no-data-available')}
       </Typography.Text>
     </ErrorPlaceHolder>
   );

@@ -517,13 +517,13 @@ const CreateUser = ({
               rules={[
                 {
                   required: true,
-                  message: t('label.scopes-comma-separated'),
+                  message: t('message.scopes-comma-separated'),
                 },
               ]}>
               <Input
                 data-testid="scopes"
                 name="scopes"
-                placeholder={t('label.scopes-comma-separated')}
+                placeholder={t('message.scopes-comma-separated')}
                 value={ssoClientConfig?.scopes}
                 onChange={handleOnChange}
               />
@@ -615,7 +615,7 @@ const CreateUser = ({
               <Input
                 data-testid="scopes"
                 name="scopes"
-                placeholder={t('label.scopes-comma-separated')}
+                placeholder={t('message.scopes-comma-separated')}
                 value={ssoClientConfig?.scopes}
                 onChange={handleOnChange}
               />

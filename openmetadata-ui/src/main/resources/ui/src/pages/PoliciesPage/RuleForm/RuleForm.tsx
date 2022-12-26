@@ -224,13 +224,13 @@ const RuleForm: FC<RuleFormProps> = ({ ruleData, setRuleData }) => {
         />
       </Form.Item>
       <Form.Item
-        label={`${t('label.resources')}:`}
+        label={`${t('label.resource-plural')}:`}
         name="resources"
         rules={[
           {
             required: true,
             message: t('label.field-required-plural', {
-              field: t('label.resources'),
+              field: t('label.resource-plural'),
             }),
           },
         ]}>
@@ -250,13 +250,13 @@ const RuleForm: FC<RuleFormProps> = ({ ruleData, setRuleData }) => {
         />
       </Form.Item>
       <Form.Item
-        label={`${t('label.operations')}:`}
+        label={`${t('label.operation-plural')}:`}
         name="operations"
         rules={[
           {
             required: true,
             message: t('label.field-required-plural', {
-              field: t('label.operations'),
+              field: t('label.operation-plural'),
             }),
           },
         ]}>
