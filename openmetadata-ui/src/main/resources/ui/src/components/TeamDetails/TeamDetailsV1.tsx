@@ -962,7 +962,7 @@ const TeamDetailsV1 = ({
               data-testid="synonyms"
               id="synonyms"
               name="synonyms"
-              placeholder={t('message.enter-comma-separated')}
+              placeholder={t('message.enter-comma-separated-term')}
               type="text"
               value={heading}
               onChange={(e) => setHeading(e.target.value)}

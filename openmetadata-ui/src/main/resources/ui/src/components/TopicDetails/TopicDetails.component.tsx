@@ -172,12 +172,14 @@ const TopicDetails: React.FC<TopicDetailsProps> = ({
       {
         key: EntityInfo.CLEAN_UP_POLICIES,
         value: `${cleanupPolicies.join(', ')} ${t(
-          'label.clean-up-policy-plural'
+          'label.clean-up-policy-plural-lowercase'
         )}`,
       },
       {
         key: EntityInfo.MAX_MESSAGE_SIZE,
-        value: `${bytesToSize(maximumMessageSize)} ${t('label.maximum-size')} `,
+        value: `${bytesToSize(maximumMessageSize)} ${t(
+          'label.maximum-size-lowercase'
+        )} `,
       },
     ];
   };
