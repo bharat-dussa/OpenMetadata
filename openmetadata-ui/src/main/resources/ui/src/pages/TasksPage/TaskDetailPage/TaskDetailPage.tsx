@@ -338,7 +338,7 @@ const TaskDetailPage = () => {
         const data = { newValue: suggestion };
         updateTaskData(data);
       } else {
-        showErrorToast(t('label.please-add-description'));
+        showErrorToast(t('server.please-add-description'));
       }
     }
   };

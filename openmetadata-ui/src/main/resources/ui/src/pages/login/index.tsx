@@ -190,7 +190,7 @@ const SigninPage = () => {
             })}>
             <SVGIcons alt="OpenMetadata Logo" icon={Icons.LOGO} width="152" />
             <Typography.Text className="mt-8 w-80 text-xl font-medium text-grey-muted">
-              {t('label.om-description')}{' '}
+              {t('message.om-description')}{' '}
             </Typography.Text>
 
             {isAuthProviderBasic ? (

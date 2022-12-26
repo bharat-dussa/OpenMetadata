@@ -320,7 +320,7 @@ const NavBar = ({
               className="tw-relative search-grey hover:tw-outline-none focus:tw-outline-none tw-pl-2 tw-pt-2 tw-pb-1.5 tw-ml-4 tw-z-41"
               data-testid="searchBox"
               id="searchBox"
-              placeholder={t('label.search-global')}
+              placeholder={t('message.search-global')}
               style={{
                 borderRadius: '0.24rem',
                 boxShadow: 'none',

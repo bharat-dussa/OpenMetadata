@@ -486,7 +486,9 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
                   rules={[
                     {
                       required: enablePartition,
-                      message: t('message.column-name-required'),
+                      message: t('message.field-text-is-required', {
+                        fieldText: t('label.column-name'),
+                      }),
                     },
                   ]}>
                   <Select
@@ -515,7 +517,9 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
                   rules={[
                     {
                       required: enablePartition,
-                      message: t('message.interval-type-required'),
+                      message: t('message.field-text-is-required', {
+                        fieldText: t('label.interval-type'),
+                      }),
                     },
                   ]}>
                   <Select
@@ -542,7 +546,9 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
                   rules={[
                     {
                       required: enablePartition,
-                      message: t('message.interval-required'),
+                      message: t('message.field-text-is-required', {
+                        fieldText: t('label.interval'),
+                      }),
                     },
                   ]}>
                   <InputNumber
@@ -569,7 +575,9 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
                   rules={[
                     {
                       required: enablePartition,
-                      message: t('message.interval-unit-required'),
+                      message: t('message.field-text-is-required', {
+                        fieldText: t('label.interval-unit'),
+                      }),
                     },
                   ]}>
                   <Select

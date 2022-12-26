@@ -289,7 +289,9 @@ const EditKPIPage = () => {
                           }
 
                           return Promise.reject(
-                            t('message.metric-value-required')
+                            t('message.field-text-is-required', {
+                              fieldText: t('label.metric-value'),
+                            })
                           );
                         },
                       },

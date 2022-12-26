@@ -232,7 +232,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.secret-key-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.secret-key'),
+                  }),
                 },
               ]}>
               <Input.Password
@@ -265,7 +267,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.secret-key-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.secret-key'),
+                  }),
                 },
               ]}>
               <Input.Password
@@ -282,7 +286,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.client-id-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.client-id'),
+                  }),
                 },
               ]}>
               <Input
@@ -299,7 +305,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.domain-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.domain'),
+                  }),
                 },
               ]}>
               <Input
@@ -339,7 +347,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.client-id-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.client-id'),
+                  }),
                 },
               ]}>
               <Input
@@ -356,7 +366,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.authority-required'),
+                  message: t('message.field-is-require', {
+                    field: t('label.authority'),
+                  }),
                 },
               ]}>
               <Input
@@ -373,7 +385,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.scopes-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.scopes'),
+                  }),
                 },
               ]}>
               <Input
@@ -396,7 +410,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.private-key-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.private-key'),
+                  }),
                 },
               ]}>
               <Input.Password
@@ -413,7 +429,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.client-id-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.client-id'),
+                  }),
                 },
               ]}>
               <Input
@@ -430,7 +448,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('label.org-url-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.org-url'),
+                  }),
                 },
               ]}>
               <Input
@@ -448,7 +468,9 @@ const AuthMechanismForm: FC<Props> = ({
                 {
                   required: true,
                   type: 'email',
-                  message: t('message.service-email-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.service-account-email'),
+                  }),
                 },
               ]}>
               <Input
@@ -480,7 +502,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.secret-key-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.secret-key'),
+                  }),
                 },
               ]}>
               <Input.Password
@@ -497,7 +521,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.client-id-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.client-id'),
+                  }),
                 },
               ]}>
               <Input
@@ -514,7 +540,9 @@ const AuthMechanismForm: FC<Props> = ({
               rules={[
                 {
                   required: true,
-                  message: t('message.token-end-point-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.token-end-point'),
+                  }),
                 },
               ]}>
               <Input
@@ -552,7 +580,11 @@ const AuthMechanismForm: FC<Props> = ({
               required: true,
               validator: () => {
                 if (!authMechanism) {
-                  return Promise.reject(t('message.auth-mechanism-required'));
+                  return Promise.reject(
+                    t('message.field-text-is-required', {
+                      fieldText: t('label.auth-mechanism'),
+                    })
+                  );
                 }
 
                 return Promise.resolve();
@@ -581,7 +613,9 @@ const AuthMechanismForm: FC<Props> = ({
                 validator: () => {
                   if (!tokenExpiry) {
                     return Promise.reject(
-                      t('message.token-expiration-required')
+                      t('message.field-text-is-required', {
+                        fieldText: t('label.token-expiration'),
+                      })
                     );
                   }
 

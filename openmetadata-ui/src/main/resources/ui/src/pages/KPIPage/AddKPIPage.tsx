@@ -228,7 +228,9 @@ const AddKPIPage = () => {
               rules={[
                 {
                   required: true,
-                  message: t('message.data-insight-chart-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.data-insight-chart'),
+                  }),
                 },
               ]}>
               <Select
@@ -259,7 +261,9 @@ const AddKPIPage = () => {
               rules={[
                 {
                   required: true,
-                  message: t('message.metric-type-required'),
+                  message: t('message.field-text-is-required', {
+                    fieldText: t('label.metric-type'),
+                  }),
                 },
               ]}>
               <Select
@@ -288,7 +292,11 @@ const AddKPIPage = () => {
                         return Promise.resolve();
                       }
 
-                      return Promise.reject(t('message.metric-value-required'));
+                      return Promise.reject(
+                        t('message.field-text-is-required', {
+                          fieldText: t('label.metric-value'),
+                        })
+                      );
                     },
                   },
                 ]}>
