@@ -37,7 +37,7 @@ const InheritedRolesCard = ({ userData }: InheritedRolesCardProps) => {
         {isEmpty(userData.inheritedRoles) ? (
           <div className="mb-4">
             <span className="inherited-no-description">
-              {t('label.no-inherited-roles-found')}
+              {t('message.no-inherited-roles-found')}
             </span>
           </div>
         ) : (

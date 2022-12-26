@@ -608,7 +608,7 @@ const TeamDetailsV1 = ({
 
   const removeUserBodyText = (leave: boolean) => {
     const text = leave
-      ? t('label.leave-the-team-team-name', {
+      ? t('message.leave-the-team-team-name', {
           teamName: currentTeam?.displayName ?? currentTeam?.name,
         })
       : t('label.remove-entity', {
@@ -779,13 +779,13 @@ const TeamDetailsV1 = ({
             description: (
               <div className="tw-mb-2">
                 <p>
-                  {t('label.no-users', {
+                  {t('message.no-users', {
                     text: teamUsersSearchText
                       ? `${t('label.as-lowercase')} ${teamUsersSearchText}.`
                       : t('label.added-yet-lowercase'),
                   })}
                 </p>
-                <p>{t('label.adding-some')} </p>
+                <p>{t('message.would-like-to-start-adding-some')} </p>
               </div>
             ),
             disabled: !entityPermissions.EditAll,
@@ -876,8 +876,8 @@ const TeamDetailsV1 = ({
       return fetchErrorPlaceHolder({
         description: (
           <div className="tw-mb-4">
-            <p> {t('label.team-no-asset')} </p>
-            <p>{t('label.adding-some')} </p>
+            <p> {t('message.team-no-asset')} </p>
+            <p>{t('message.would-like-to-start-adding-some')} </p>
           </div>
         ),
         button: (
@@ -962,7 +962,7 @@ const TeamDetailsV1 = ({
               data-testid="synonyms"
               id="synonyms"
               name="synonyms"
-              placeholder={t('label.enter-comma-separated')}
+              placeholder={t('message.enter-comma-separated')}
               type="text"
               value={heading}
               onChange={(e) => setHeading(e.target.value)}

@@ -566,7 +566,7 @@ const Users = ({
         ))}
         {!userData.isAdmin && isEmpty(userData.roles) && (
           <span className="tw-no-description ">
-            {t('label.no-roles-assigned')}
+            {t('message.no-roles-assigned')}
           </span>
         )}
       </Fragment>
@@ -692,7 +692,7 @@ const Users = ({
           {isEmpty(userData.inheritedRoles) ? (
             <div className="tw-mb-4">
               <span className="tw-no-description">
-                {t('label.no-inherited-roles-found')}
+                {t('message.no-inherited-roles-found')}
               </span>
             </div>
           ) : (

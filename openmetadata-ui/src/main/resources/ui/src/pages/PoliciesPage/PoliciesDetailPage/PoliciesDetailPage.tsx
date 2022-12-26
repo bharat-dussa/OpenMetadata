@@ -357,7 +357,7 @@ const PoliciesDetailPage = () => {
           {isEmpty(policy) ? (
             <ErrorPlaceHolder>
               <div className="text-center">
-                <p>{`${t('label.no-policy-found-for')} ${fqn}`}</p>
+                <p>{`${t('message.no-policy-found-for')} ${fqn}`}</p>
                 <Button
                   size="small"
                   type="primary"
@@ -386,7 +386,7 @@ const PoliciesDetailPage = () => {
                 <TabPane key="rules" tab={t('label.rules')}>
                   {isEmpty(policy.rules) ? (
                     <ErrorPlaceHolder>
-                      <p>{t('label.no-rule-found')}</p>
+                      <p>{t('message.no-rule-found')}</p>
                     </ErrorPlaceHolder>
                   ) : (
                     <Space

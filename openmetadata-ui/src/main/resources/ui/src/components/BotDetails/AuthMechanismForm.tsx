@@ -627,7 +627,7 @@ const AuthMechanismForm: FC<Props> = ({
               className="w-full"
               data-testid="token-expiry"
               defaultValue={tokenExpiry}
-              placeholder={t('label.select-token-expiration')}
+              placeholder={t('message.select-token-expiration')}
               onChange={(value) => setTokenExpiry(value)}>
               {getJWTTokenExpiryOptions().map((option) => (
                 <Option key={option.value}>{option.label}</Option>

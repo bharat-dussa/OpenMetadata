@@ -236,13 +236,13 @@ const EditTestCaseModal: React.FC<EditTestCaseModalProps> = ({
             </Form.Item>
           )}
           <Form.Item required label={`${t('label.name')}:`} name="name">
-            <Input disabled placeholder={t('label.enter-test-case-name')} />
+            <Input disabled placeholder={t('message.enter-test-case-name')} />
           </Form.Item>
           <Form.Item
             required
             label={`${t('label.test-type')}:`}
             name="testDefinition">
-            <Input disabled placeholder={t('label.enter-test-case-name')} />
+            <Input disabled placeholder={t('message.enter-test-case-name')} />
           </Form.Item>
 
           {GenerateParamsField()}
