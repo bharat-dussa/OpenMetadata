@@ -29,7 +29,7 @@ const InheritedRolesCard = ({ userData }: InheritedRolesCardProps) => {
       title={
         <div className="flex">
           <h6 className="heading mb-0" data-testid="inherited-roles-heading">
-            {t('label.inherited-roles')}
+            {t('label.inherited-role-plural')}
           </h6>
         </div>
       }>

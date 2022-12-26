@@ -265,7 +265,7 @@ const TeamDetailsV1 = ({
     return [
       ...commonUserDetailColumns(),
       {
-        title: t('label.actions'),
+        title: t('label.action-plural'),
         dataIndex: 'actions',
         key: 'actions',
         width: 90,
@@ -554,7 +554,7 @@ const TeamDetailsV1 = ({
       showErrorToast(
         error as AxiosError,
         t('server.entity-fetch-error', {
-          entity: t('label.user-permissions'),
+          entity: t('label.user-permission-plural'),
         })
       );
     } finally {
@@ -1335,7 +1335,7 @@ const TeamDetailsV1 = ({
             </div>
           }
           doc={TEAMS_DOCS}
-          heading={t('label.teams')}
+          heading={t('label.team-plural')}
           type="ADD_DATA"
         />
       )}

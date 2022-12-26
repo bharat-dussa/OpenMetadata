@@ -165,7 +165,7 @@ const AddTeamForm: React.FC<AddTeamFormType> = ({
           ]}>
           <Input
             data-testid="display-name"
-            placeholder={t('label.enter-display-name')}
+            placeholder={t('message.enter-display-name')}
           />
         </Form.Item>
         <Form.Item label={t('label.team-type')} name="teamType">

@@ -73,7 +73,7 @@ const VersionTable = ({ columnName, columns, joins }: VersionTableProps) => {
               {getFrequentlyJoinedColumns(
                 columnName,
                 joins,
-                t('label.frequently-joined-columns')
+                t('label.frequently-joined-column-plural')
               )}
             </>
           ) : (

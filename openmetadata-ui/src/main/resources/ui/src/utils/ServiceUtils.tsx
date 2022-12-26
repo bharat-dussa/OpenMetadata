@@ -696,7 +696,7 @@ export const getOptionalFields = (
 
       return (
         <div className="tw-mb-1 tw-truncate" data-testid="additional-field">
-          <label className="tw-mb-0">{t('label.brokers')}:</label>
+          <label className="tw-mb-0">{t('label.broker-plural')}:</label>
           <span
             className=" tw-ml-1 tw-font-normal tw-text-grey-body"
             data-testid="brokers">

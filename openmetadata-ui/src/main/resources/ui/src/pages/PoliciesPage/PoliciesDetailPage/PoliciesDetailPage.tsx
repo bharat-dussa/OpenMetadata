@@ -506,7 +506,7 @@ const PoliciesDetailPage = () => {
                     </Space>
                   )}
                 </TabPane>
-                <TabPane key="roles" tab={t('label.roles')}>
+                <TabPane key="roles" tab={t('label.role-plural')}>
                   <PoliciesDetailsList
                     hasAccess={policyPermission.EditAll}
                     list={policy.roles ?? []}
@@ -516,7 +516,7 @@ const PoliciesDetailPage = () => {
                     }
                   />
                 </TabPane>
-                <TabPane key="teams" tab={t('label.teams')}>
+                <TabPane key="teams" tab={t('label.team-plural')}>
                   <PoliciesDetailsList
                     hasAccess={policyPermission.EditAll}
                     list={policy.teams ?? []}

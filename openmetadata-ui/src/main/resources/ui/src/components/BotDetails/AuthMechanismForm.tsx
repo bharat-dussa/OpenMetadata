@@ -380,13 +380,13 @@ const AuthMechanismForm: FC<Props> = ({
               />
             </Form.Item>
             <Form.Item
-              label={t('label.scopes')}
+              label={t('label.scope-plural')}
               name="scopes"
               rules={[
                 {
                   required: true,
                   message: t('message.field-text-is-required', {
-                    fieldText: t('label.scopes'),
+                    fieldText: t('label.scope-plural'),
                   }),
                 },
               ]}>
@@ -481,7 +481,7 @@ const AuthMechanismForm: FC<Props> = ({
                 onChange={handleOnChange}
               />
             </Form.Item>
-            <Form.Item label={t('label.scopes')} name="scopes">
+            <Form.Item label={t('label.scope-plural')} name="scopes">
               <Input
                 data-testid="scopes"
                 name="scopes"

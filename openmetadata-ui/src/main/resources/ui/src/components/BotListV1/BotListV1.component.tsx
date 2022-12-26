@@ -118,7 +118,7 @@ const BotListV1 = ({
           ),
       },
       {
-        title: t('label.actions'),
+        title: t('label.action-plural'),
         dataIndex: 'id',
         key: 'id',
         width: 90,
@@ -268,7 +268,7 @@ const BotListV1 = ({
       <Col span={8}>
         <Searchbar
           removeMargin
-          placeholder={t('label.search-for-bots')}
+          placeholder={`${t('label.search-for-bot-plural')}...`}
           typingInterval={500}
           onSearch={handleSearch}
         />

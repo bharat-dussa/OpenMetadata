@@ -285,7 +285,7 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
         htmlType: 'submit',
       }}
       okText={t('label.save')}
-      title={t('label.settings')}
+      title={t('label.setting-plural')}
       visible={visible}
       width={630}
       onCancel={handleCancel}>
@@ -364,7 +364,7 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
           />
         </Col>
         <Col data-testid="exclude-column-container" span={24}>
-          <p className="tw-mb-4">{t('label.enable-column-profile')}</p>
+          <p className="tw-mb-4">{t('message.enable-column-profile')}</p>
           <p className="tw-text-xs tw-mb-1.5">{t('label.exclude')}:</p>
           <Select
             allowClear
@@ -372,7 +372,7 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
             data-testid="exclude-column-select"
             mode="tags"
             options={selectOptions}
-            placeholder={t('label.select-column-exclude')}
+            placeholder={t('label.select-column-plural-to-exclude')}
             size="middle"
             value={excludeCol}
             onChange={(value) => setExcludeCol(value)}
@@ -426,7 +426,9 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
                               className="w-full"
                               data-testid="exclude-column-select"
                               options={selectOptions}
-                              placeholder={t('label.select-column-include')}
+                              placeholder={t(
+                                'label.select-column-plural-to-include'
+                              )}
                               size="middle"
                             />
                           </Form.Item>

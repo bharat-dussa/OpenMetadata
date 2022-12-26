@@ -107,7 +107,7 @@ export const commonUserDetailColumns = (): ColumnsType<User> => [
     ),
   },
   {
-    title: t('label.teams'),
+    title: t('label.team-plural'),
     dataIndex: 'teams',
     key: 'teams',
     render: (_, record) => {
@@ -155,7 +155,7 @@ export const commonUserDetailColumns = (): ColumnsType<User> => [
     },
   },
   {
-    title: t('label.roles'),
+    title: t('label.role-plural'),
     dataIndex: 'roles',
     key: 'roles',
     render: (_, record) => {

@@ -398,7 +398,7 @@ const EditKPIPage = () => {
                   <RichTextEditor
                     height="200px"
                     initialValue={description}
-                    placeHolder={t('label.write-your-description')}
+                    placeHolder={t('message.write-your-description')}
                     style={{ margin: 0 }}
                     onTextChange={(value) => setDescription(value)}
                   />

@@ -587,7 +587,7 @@ const TaskDetailPage = () => {
                       className={classNames('tw-text-grey-muted', {
                         'tw-self-center tw-mr-2': editAssignee,
                       })}>
-                      {t('label.assignees')}:
+                      {t('label.assignee-plural')}:
                     </span>
                     {editAssignee ? (
                       <Fragment>
