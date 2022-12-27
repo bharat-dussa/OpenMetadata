@@ -556,8 +556,9 @@ const TagsPage = () => {
     history.push(getTagPath(category.name));
   };
 
-  const handlePageChange = (after: string | number) => {
+  const handlePageChange = (after: string | number, activePage: number) => {
     if (after) {
+      setCurrentPage(activePage ?? INITIAL_PAGING_VALUE);
       fetchClassificationChildrens(currentCategoryName, paging);
     }
   };
