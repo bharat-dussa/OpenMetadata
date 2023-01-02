@@ -10,6 +10,5 @@
   },
 
   // Indentations purely based on linters and file formatters, not based on existing occurrences
-  "editor.detectIndentation": false,
-  "cSpell.words": ["ingestions"]
+  "editor.detectIndentation": false
 }
