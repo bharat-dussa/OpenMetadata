@@ -263,7 +263,7 @@ const ProfilerSettingsModal: React.FC<ProfilerSettingsModalProps> = ({
 
   const onChangeSliderInput = useCallback(
     (value) => setProfileSample(Number(value)),
-    []
+    [setProfileSample]
   );
 
   useEffect(() => {

@@ -101,7 +101,7 @@ const ConfigureIngestion = ({
       handleProfileSampleType(value);
       handleProfileSample(undefined);
     },
-    []
+    [handleProfileSample]
   );
 
   const onChangeSlider = useCallback(
