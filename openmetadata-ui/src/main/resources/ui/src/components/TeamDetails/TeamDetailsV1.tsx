@@ -1398,10 +1398,13 @@ const TeamDetailsV1 = ({
             setEntity(undefined);
           }}>
           <Typography.Text>
-            {t('message.are-you-sure-you-want-to-remove-entity', {
-              subEntity: getEntityName(selectedEntity.record),
-              entity: getEntityName(currentTeam),
-            })}
+            {t(
+              'message.are-you-sure-you-want-to-remove-subentity-from-entity',
+              {
+                subEntity: getEntityName(selectedEntity.record),
+                entity: getEntityName(currentTeam),
+              }
+            )}
           </Typography.Text>
         </Modal>
       )}

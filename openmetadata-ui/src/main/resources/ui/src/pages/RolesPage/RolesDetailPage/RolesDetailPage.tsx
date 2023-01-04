@@ -367,10 +367,13 @@ const RolesDetailPage = () => {
             setEntity(undefined);
           }}>
           <Typography.Text>
-            {t('message.are-you-sure-you-want-to-remove-entity', {
-              subEntity: getEntityName(selectedEntity.record),
-              entity: getEntityName(role),
-            })}
+            {t(
+              'message.are-you-sure-you-want-to-remove-subentity-from-entity',
+              {
+                subEntity: getEntityName(selectedEntity.record),
+                entity: getEntityName(role),
+              }
+            )}
           </Typography.Text>
         </Modal>
       )}

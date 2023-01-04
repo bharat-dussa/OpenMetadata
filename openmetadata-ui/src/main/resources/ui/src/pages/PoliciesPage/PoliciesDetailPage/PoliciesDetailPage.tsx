@@ -552,10 +552,13 @@ const PoliciesDetailPage = () => {
             setEntity(undefined);
           }}>
           <Typography.Text>
-            {t('message.are-you-sure-you-want-to-remove-entity', {
-              subEntity: getEntityName(selectedEntity.record),
-              entity: getEntityName(policy),
-            })}
+            {t(
+              'message.are-you-sure-you-want-to-remove-subentity-from-entity',
+              {
+                subEntity: getEntityName(selectedEntity.record),
+                entity: getEntityName(policy),
+              }
+            )}
           </Typography.Text>
         </Modal>
       )}
