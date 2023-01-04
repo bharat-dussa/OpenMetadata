@@ -12,7 +12,7 @@
  */
 
 import classNames from 'classnames';
-import { isUndefined } from 'lodash';
+import { isUndefined, toString } from 'lodash';
 import { ExtraInfo } from 'Models';
 import React, { FC, useEffect, useState } from 'react';
 import { FQN_SEPARATOR_CHAR } from '../../constants/char.constants';
@@ -114,8 +114,8 @@ const TopicVersion: FC<TopicVersionProp> = ({
       descriptionDiff?.updated?.newValue;
 
     return getDescriptionDiff(
-      oldDescription,
-      newDescription,
+      toString(oldDescription),
+      toString(newDescription),
       currentVersionData.description
     );
   };

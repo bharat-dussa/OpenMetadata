@@ -14,7 +14,7 @@
 import { Space, Table } from 'antd';
 import { ColumnsType } from 'antd/lib/table';
 import classNames from 'classnames';
-import { isUndefined } from 'lodash';
+import { isUndefined, toString } from 'lodash';
 import { ExtraInfo } from 'Models';
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -88,8 +88,8 @@ const PipelineVersion: FC<PipelineVersionProp> = ({
       descriptionDiff?.updated?.newValue;
 
     return getDescriptionDiff(
-      oldDescription,
-      newDescription,
+      toString(oldDescription),
+      toString(newDescription),
       currentVersionData.description
     );
   };

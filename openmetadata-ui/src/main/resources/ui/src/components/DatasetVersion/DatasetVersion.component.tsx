@@ -12,7 +12,7 @@
  */
 
 import classNames from 'classnames';
-import { cloneDeep, isEqual, isUndefined } from 'lodash';
+import { cloneDeep, isEqual, isUndefined, toString } from 'lodash';
 import { ExtraInfo } from 'Models';
 import React, { useEffect, useState } from 'react';
 import { FQN_SEPARATOR_CHAR } from '../../constants/char.constants';
@@ -153,8 +153,8 @@ const DatasetVersion: React.FC<DatasetVersionProp> = ({
       descriptionDiff?.updated?.newValue;
 
     return getDescriptionDiff(
-      oldDescription,
-      newDescription,
+      toString(oldDescription),
+      toString(newDescription),
       currentVersionData.description
     );
   };
@@ -192,8 +192,8 @@ const DatasetVersion: React.FC<DatasetVersionProp> = ({
         arr?.forEach((i) => {
           if (isEqual(i.name, changedColName)) {
             i.description = getDescriptionDiff(
-              oldDescription,
-              newDescription,
+              toString(oldDescription),
+              toString(newDescription),
               i.description
             );
           } else {
