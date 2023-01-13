@@ -144,7 +144,7 @@ const FacetFilter: React.FC<FacetFilterProps> = ({
         ) => (
           <div data-testid={`filter-heading-${aggregationKey}`} key={index}>
             <div className="d-flex justify-between flex-col">
-              <h6 className="font-medium text-grey-body m-b-sm m-y-xs">
+              <h6 className="font-medium text-xs text-grey-muted m-b-sm m-y-xs">
                 {translateAggregationKeyToTitle(aggregationKey)}
               </h6>
             </div>
