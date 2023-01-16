@@ -105,6 +105,26 @@ type DeleteTagsType = {
   state: boolean;
 };
 
+const RenderDeleteIcon = ({
+  deleteTags,
+  id,
+}: {
+  deleteTags: DeleteTagsType;
+  id: string | undefined;
+}) => {
+  if (deleteTags.data?.id === id) {
+    if (deleteTags.data?.status === 'success') {
+      return <FontAwesomeIcon icon="check" />;
+    }
+
+    return <Loader size="small" type="default" />;
+  }
+
+  return (
+    <SVGIcons alt="delete" icon="icon-delete" title="Delete" width="16px" />
+  );
+};
+
 const TagsPage = () => {
   const { getEntityPermission, permissions } = usePermissionProvider();
   const history = useHistory();
@@ -205,7 +225,7 @@ const TagsPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await getAllClassifications('', 1000);
+      const response = await getAllClassifications('termCount', 1000);
       setClassifications(response.data);
       if (setCurrent && response.data.length) {
         setCurrentClassification(response.data[0]);
@@ -587,6 +607,8 @@ const TagsPage = () => {
     }
   };
 
+  // Use the component in the render method
+
   const fetchLeftPanel = () => {
     return (
       <LeftPanelCard id="tags">
@@ -613,7 +635,7 @@ const TagsPage = () => {
                       setIsAddingClassification((prevState) => !prevState);
                       setErrorDataClassification(undefined);
                     }}>
-                    <SVGIcons alt="plus" icon={Icons.ICON_PLUS_PRIMERY} />{' '}
+                    <SVGIcons alt="plus" icon={Icons.ICON_PLUS_PRIMARY} />{' '}
                     <span>
                       {t('label.add-entity', {
                         entity: t('label.classification'),
@@ -641,7 +663,7 @@ const TagsPage = () => {
                     {getEntityName(category as unknown as EntityReference)}
                   </Typography.Paragraph>
                   {getCountBadge(
-                    0,
+                    category.termCount,
                     'tw-self-center',
                     currentClassification?.name === category.name
                   )}
@@ -731,20 +753,7 @@ const TagsPage = () => {
               !classificationPermissions.EditAll
             }
             onClick={() => handleActionDeleteTag(record)}>
-            {deleteTags.data?.id === record.id ? (
-              deleteTags.data?.status === 'success' ? (
-                <FontAwesomeIcon icon="check" />
-              ) : (
-                <Loader size="small" type="default" />
-              )
-            ) : (
-              <SVGIcons
-                alt="delete"
-                icon="icon-delete"
-                title="Delete"
-                width="16px"
-              />
-            )}
+            <RenderDeleteIcon deleteTags={deleteTags} id={record.id} />
           </button>
         ),
       },
