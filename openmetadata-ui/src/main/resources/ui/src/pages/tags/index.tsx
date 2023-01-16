@@ -44,7 +44,7 @@ import {
 import TagsLeftPanelSkeleton from 'components/Skeleton/Tags/TagsLeftPanelSkeleton.component';
 import { compare } from 'fast-json-patch';
 import { isEmpty, isUndefined, toLower, trim } from 'lodash';
-import { FormErrorData, LoadingState } from 'Models';
+import { FormErrorData } from 'Models';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useHistory, useParams } from 'react-router-dom';
@@ -91,39 +91,8 @@ import SVGIcons, { Icons } from '../../utils/SvgUtils';
 import { showErrorToast } from '../../utils/ToastUtils';
 import Form from './Form';
 import './TagPage.style.less';
-
-type DeleteTagDetailsType = {
-  id: string;
-  name: string;
-  categoryName?: string;
-  isCategory: boolean;
-  status?: LoadingState;
-};
-
-type DeleteTagsType = {
-  data: DeleteTagDetailsType | undefined;
-  state: boolean;
-};
-
-const RenderDeleteIcon = ({
-  deleteTags,
-  id,
-}: {
-  deleteTags: DeleteTagsType;
-  id: string | undefined;
-}) => {
-  if (deleteTags.data?.id === id) {
-    if (deleteTags.data?.status === 'success') {
-      return <FontAwesomeIcon icon="check" />;
-    }
-
-    return <Loader size="small" type="default" />;
-  }
-
-  return (
-    <SVGIcons alt="delete" icon="icon-delete" title="Delete" width="16px" />
-  );
-};
+import { DeleteTagsType } from './TagsPage.interface';
+import { RenderDeleteIcon } from './TagsPageUtils';
 
 const TagsPage = () => {
   const { getEntityPermission, permissions } = usePermissionProvider();
