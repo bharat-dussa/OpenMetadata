@@ -48,6 +48,51 @@ describe('Advance search should work properly for all fields', () => {
     addTag(FIELDS.Tags.searchCriteriaFirstGroup);
   });
 
+  it('While navigating through services, if a filter for owner or tag is applied, it should persist across tabs', () => {
+    let dropDownKey = '';
+
+    interceptURL(
+      'GET',
+      '/api/v1/search/aggregate?index=table_search_index&field=owner.name',
+      'getAggregations'
+    );
+
+    interceptURL('GET', '/api/v1/search/query?q=*', 'searchQuery');
+
+    cy.get('[data-testid="appbar-item-explore"]')
+      .should('exist')
+      .and('be.visible')
+      .click();
+
+    cy.get('[data-testid="tables-tab"]').should('exist').click();
+
+    cy.get('[data-testid="search-dropdown"]')
+      .should('exist')
+      .within(() => {
+        cy.contains('Owner').should('be.visible').click();
+      });
+
+    cy.wait('@getAggregations').then((response) => {
+      const dropDownData =
+        response.response.body.aggregations['sterms#owner.name'].buckets;
+
+      dropDownKey = dropDownData[0].key;
+
+      cy.get('.ant-dropdown-menu-item').click();
+
+      cy.get('[data-testid="update-btn"]').click();
+    });
+
+    // traverse to new tab
+    cy.wait('@searchQuery').then(() => {
+      cy.contains(`Owner: ${dropDownKey}`);
+
+      cy.get('[data-testid="topics-tab"]').should('exist').click();
+
+      cy.contains(`Owner: ${dropDownKey}`);
+    });
+  });
+
   it('Mysql ingestion', () => {
     interceptURL(
       'GET',
