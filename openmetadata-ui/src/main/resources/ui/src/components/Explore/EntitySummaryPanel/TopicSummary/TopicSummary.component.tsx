@@ -14,9 +14,11 @@
 import { Col, Divider, Row, Typography } from 'antd';
 import classNames from 'classnames';
 import { isArray, isEmpty } from 'lodash';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getTopicByFqn } from 'rest/topicsAPI';
 import { DRAWER } from 'utils/EntityUtils';
+import { showErrorToast } from 'utils/ToastUtils';
 import { SummaryEntityType } from '../../../../enums/EntitySummary.enum';
 import { SearchIndex } from '../../../../enums/search.enum';
 import { Topic } from '../../../../generated/entity/data/topic';
@@ -39,15 +41,17 @@ function TopicSummary({
 }: TopicSummaryProps) {
   const { t } = useTranslation();
 
+  const [topicDetails, setTopicDetails] = useState<Topic>(entityDetails);
+
   const topicConfig = useMemo(() => {
-    const configs = getConfigObject(entityDetails);
+    const configs = getConfigObject(topicDetails);
 
     return {
       ...configs,
       'Retention Size': bytesToSize(configs['Retention Size'] ?? 0),
       'Max Message Size': bytesToSize(configs['Max Message Size'] ?? 0),
     };
-  }, [entityDetails]);
+  }, [topicDetails]);
 
   const formattedSchemaFieldsData: BasicEntityInfo[] = useMemo(
     () =>
@@ -57,6 +61,30 @@ function TopicSummary({
       ),
     [entityDetails]
   );
+
+  const fetchExtraTopicInfo = async () => {
+    try {
+      const res = await getTopicByFqn(
+        entityDetails.fullyQualifiedName ?? '',
+        ''
+      );
+
+      const { partitions, messageSchema } = res;
+
+      setTopicDetails({ ...entityDetails, partitions, messageSchema });
+    } catch {
+      showErrorToast(
+        t('server.entity-details-fetch-error', {
+          entityType: t('label.topic-lowercase'),
+          entityName: entityDetails.name,
+        })
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchExtraTopicInfo();
+  }, [entityDetails]);
 
   return (
     <>
@@ -116,7 +144,7 @@ function TopicSummary({
           </Typography.Text>
         </Col>
         <Col span={24}>
-          {isEmpty(entityDetails.messageSchema?.schemaFields) ? (
+          {isEmpty(topicDetails.messageSchema?.schemaFields) ? (
             <div className="m-y-md">
               <Typography.Text
                 className="text-gray"

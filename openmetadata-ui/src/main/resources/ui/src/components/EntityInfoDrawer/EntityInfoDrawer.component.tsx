@@ -282,8 +282,6 @@ const EntityInfoDrawer = ({
         <>
           {summaryComponent}
 
-          <Divider className="m-y-xs" />
-
           <Row gutter={[0, 16]}>
             <Col span={24}>
               <span className="text-grey-muted">{t('label.tag-plural')}</span>

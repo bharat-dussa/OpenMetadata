@@ -57,7 +57,7 @@ function MlModelSummary({
         className={classNames({
           'm-md': componentType === DRAWER.explore,
         })}
-        gutter={[8, 8]}>
+        gutter={[0, 4]}>
         {componentType === DRAWER.explore ? (
           <Col span={24}>
             <TableDataCardTitle
@@ -68,7 +68,7 @@ function MlModelSummary({
           </Col>
         ) : null}
         <Col span={24}>
-          <Row gutter={[0, 8]}>
+          <Row>
             {entityInfo.map((info) =>
               info.visible?.includes(componentType) ? (
                 <Col key={info.name} span={24}>

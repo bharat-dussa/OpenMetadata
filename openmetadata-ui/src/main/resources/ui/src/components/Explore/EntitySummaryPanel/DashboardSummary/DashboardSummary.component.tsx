@@ -95,7 +95,7 @@ function DashboardSummary({
         ) : null}
 
         <Col span={24}>
-          <Row gutter={[0, 8]}>
+          <Row>
             {entityInfo.map((info) =>
               info.visible?.includes(componentType) ? (
                 <Col key={info.name} span={24}>
