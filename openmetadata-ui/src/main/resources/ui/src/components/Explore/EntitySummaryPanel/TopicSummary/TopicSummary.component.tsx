@@ -14,7 +14,7 @@
 import { Col, Divider, Row, Typography } from 'antd';
 import classNames from 'classnames';
 import { isArray, isEmpty } from 'lodash';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getTopicByFqn } from 'rest/topicsAPI';
 import { DRAWER } from 'utils/EntityUtils';
@@ -62,7 +62,7 @@ function TopicSummary({
     [entityDetails]
   );
 
-  const fetchExtraTopicInfo = async () => {
+  const fetchExtraTopicInfo = useCallback(async () => {
     try {
       const res = await getTopicByFqn(
         entityDetails.fullyQualifiedName ?? '',
@@ -80,11 +80,11 @@ function TopicSummary({
         })
       );
     }
-  };
+  }, [entityDetails]);
 
   useEffect(() => {
-    fetchExtraTopicInfo();
-  }, [entityDetails]);
+    componentType === DRAWER.explore && fetchExtraTopicInfo();
+  }, [entityDetails, componentType]);
 
   return (
     <>
@@ -144,7 +144,7 @@ function TopicSummary({
           </Typography.Text>
         </Col>
         <Col span={24}>
-          {isEmpty(topicDetails.messageSchema?.schemaFields) ? (
+          {isEmpty(topicDetails?.messageSchema?.schemaFields) ? (
             <div className="m-y-md">
               <Typography.Text
                 className="text-gray"
