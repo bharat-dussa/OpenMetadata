@@ -113,7 +113,7 @@ function DashboardSummary({
                             <Typography.Text
                               className="link"
                               data-testid="dashboard-link-name">
-                              {entityDetails.name}
+                              {entityDetails.fullyQualifiedName}
                             </Typography.Text>
                             <SVGIcons
                               alt="external-link"
