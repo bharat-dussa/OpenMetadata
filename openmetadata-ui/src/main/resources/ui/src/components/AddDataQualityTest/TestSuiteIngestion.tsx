@@ -13,9 +13,9 @@
 
 import { Col, Row, Typography } from 'antd';
 import { AxiosError } from 'axios';
-import { t } from 'i18next';
 import { camelCase, isEmpty } from 'lodash';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useHistory, useParams } from 'react-router-dom';
 import {
   addIngestionPipeline,
@@ -38,6 +38,7 @@ import jsonData from '../../jsons/en';
 import {
   getIngestionFrequency,
   replaceSpaceWith_,
+  Transi18next,
 } from '../../utils/CommonUtils';
 import { getTestSuitePath } from '../../utils/RouterUtils';
 import { showErrorToast } from '../../utils/ToastUtils';
@@ -53,6 +54,7 @@ const TestSuiteIngestion: React.FC<TestSuiteIngestionProps> = ({
 }) => {
   const { ingestionFQN } = useParams<Record<string, string>>();
   const history = useHistory();
+  const { t } = useTranslation();
   const [ingestionData, setIngestionData] = useState<
     IngestionPipeline | undefined
   >(ingestionPipeline);
@@ -67,19 +69,21 @@ const TestSuiteIngestion: React.FC<TestSuiteIngestionProps> = ({
   const [isIngestionCreated, setIsIngestionCreated] = useState(false);
   const [ingestionProgress, setIngestionProgress] = useState(0);
   const getSuccessMessage = useMemo(() => {
-    const createMessage = showDeployButton
-      ? `has been ${ingestionFQN ? 'updated' : 'created'}, but failed to deploy`
-      : `has been ${
-          ingestionFQN ? 'updated' : 'created'
-        } and deployed successfully`;
-
     return (
-      <span>
-        <span className="tw-mr-1 tw-font-semibold">
-          {`"${ingestionData?.name ?? 'Test Suite'}"`}
-        </span>
-        <span>{createMessage}</span>
-      </span>
+      <Transi18next
+        i18nKey={
+          showDeployButton
+            ? 'message.entity-has-been-entity-status-but-failed-to-deploy'
+            : 'message.entity-has-been-entity-status-and-deployed-successfully'
+        }
+        renderElement={<strong />}
+        values={{
+          entity: `"${ingestionData?.name ?? t('label.test-suite')}"`,
+          entityStatus: ingestionFQN
+            ? t('label.updated-lowercase')
+            : t('label.created-lowercase'),
+        }}
+      />
     );
   }, [ingestionData, showDeployButton]);
 
@@ -197,6 +201,7 @@ const TestSuiteIngestion: React.FC<TestSuiteIngestionProps> = ({
 
   return (
     <Row className="tw-form-container" gutter={[16, 16]}>
+      {getSuccessMessage}
       <Col span={24}>
         <Typography.Paragraph
           className="tw-heading tw-text-base"
@@ -215,7 +220,9 @@ const TestSuiteIngestion: React.FC<TestSuiteIngestionProps> = ({
             showIngestionButton={false}
             state={FormSubmitType.ADD}
             successMessage={getSuccessMessage}
-            viewServiceText="View Test Suite"
+            viewServiceText={t('label.view-entity', {
+              entity: t('label.test-suite'),
+            })}
           />
         ) : (
           <TestSuiteScheduler
