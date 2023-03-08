@@ -440,6 +440,8 @@ const GlossaryHeader = ({
                 })}
               </span>
             )}
+          </div>
+          <div className="relative">
             <Tooltip
               placement="topRight"
               title={
