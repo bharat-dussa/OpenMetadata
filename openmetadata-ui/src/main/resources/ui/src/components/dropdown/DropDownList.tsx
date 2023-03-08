@@ -11,10 +11,19 @@
  *  limitations under the License.
  */
 
-import { Tooltip } from 'antd';
+import { Checkbox, Tooltip } from 'antd';
+import { CheckboxChangeEvent } from 'antd/lib/checkbox';
 import classNames from 'classnames';
-import { isNil, isUndefined, toLower, toString } from 'lodash';
-import React, { FunctionComponent, useEffect, useRef, useState } from 'react';
+import { EntityReference } from 'generated/type/entityReference';
+import { isNil, isUndefined, toLower, toString, uniqueId } from 'lodash';
+import {
+  default as React,
+  FunctionComponent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { SIZE } from '../../enums/common.enum';
 import { useWindowDimensions } from '../../hooks/useWindowDimensions';
@@ -24,6 +33,7 @@ import SVGIcons, { Icons } from '../../utils/SvgUtils';
 import ErrorPlaceHolder from '../common/error-with-placeholder/ErrorPlaceHolder';
 import { UserTag } from '../common/UserTag/UserTag.component';
 import Loader from '../Loader/Loader';
+import './DropDownList.style.less';
 import { DropDownListItem, DropDownListProp } from './types';
 
 /**
@@ -49,6 +59,9 @@ const DropDownList: FunctionComponent<DropDownListProp> = ({
   widthClass = 'tw-w-52',
   removeOwner,
   getTotalCountForGroup,
+  isMultipleSelect = false,
+  selectedItems,
+  onClickUserTag,
 }: DropDownListProp) => {
   const { height: windowHeight } = useWindowDimensions();
   const { t } = useTranslation();
@@ -97,6 +110,11 @@ const DropDownList: FunctionComponent<DropDownListProp> = ({
       </div>
     );
   };
+
+  const defaultCheckedValues = useMemo(
+    () => (selectedItems as EntityReference[])?.map((item) => item.id),
+    [selectedItems]
+  );
 
   const getSearchedListByGroup = (
     groupName?: string
@@ -198,12 +216,24 @@ const DropDownList: FunctionComponent<DropDownListProp> = ({
       return getEmptyTextElement();
     }
 
-    return (
+    return !isMultipleSelect ? (
       <>
         {results.map((item: DropDownListItem, index: number) =>
           getDropDownElement(item, index)
         )}
       </>
+    ) : (
+      <Checkbox.Group className="" defaultValue={defaultCheckedValues}>
+        {results.map((item: DropDownListItem) => (
+          <Checkbox
+            className="flex flex-col"
+            key={uniqueId()}
+            value={item.value}
+            onChange={(e) => onClickUserTag?.(e, item.value as string)}>
+            <UserTag id={item.value as string} name={item.name as string} />
+          </Checkbox>
+        ))}
+      </Checkbox.Group>
     );
   };
 
@@ -226,13 +256,26 @@ const DropDownList: FunctionComponent<DropDownListProp> = ({
       );
     }
 
-    return (
+    return !isMultipleSelect ? (
       <>
         {results.length > 0 && groupLabel}
         {results.map((item: DropDownListItem, index: number) =>
           getDropDownElement(item, index)
         )}
       </>
+    ) : (
+      <Checkbox.Group
+        className="flex flex-col"
+        defaultValue={defaultCheckedValues}>
+        {results.map((item: DropDownListItem) => (
+          <Checkbox
+            key={uniqueId()}
+            value={item.value}
+            onChange={(e) => onClickUserTag?.(e, item.value as string)}>
+            <UserTag id={item.value as string} name={item.name as string} />
+          </Checkbox>
+        ))}
+      </Checkbox.Group>
     );
   };
 
@@ -261,12 +304,27 @@ const DropDownList: FunctionComponent<DropDownListProp> = ({
       []
     );
 
-    return (
+    return !isMultipleSelect ? (
       <>
         {filteredResult.map((item: DropDownListItem, index: number) =>
           getDropDownElement(item, index)
         )}
       </>
+    ) : (
+      <Checkbox.Group
+        className="flex flex-col"
+        defaultValue={defaultCheckedValues}>
+        {filteredResult.map((item: DropDownListItem) => (
+          <Checkbox
+            key={uniqueId()}
+            value={item.value}
+            onChange={(e: CheckboxChangeEvent) =>
+              onClickUserTag?.(e, item.value as string)
+            }>
+            <UserTag id={item.value as string} name={item.name as string} />
+          </Checkbox>
+        ))}
+      </Checkbox.Group>
     );
   };
 
@@ -338,7 +396,7 @@ const DropDownList: FunctionComponent<DropDownListProp> = ({
             aria-labelledby="menu-button"
             aria-orientation="vertical"
             className={classNames(
-              'dropdown-list tw-mt-0.5',
+              'dropdown-list tw-mt-0.5 drop-down-list',
               horzPosRight ? 'dd-horz-right' : 'dd-horz-left',
               className
             )}

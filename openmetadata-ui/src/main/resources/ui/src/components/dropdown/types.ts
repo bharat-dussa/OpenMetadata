@@ -11,6 +11,9 @@
  *  limitations under the License.
  */
 
+import { CheckboxChangeEvent } from 'antd/lib/checkbox';
+import { CheckboxValueType } from 'antd/lib/checkbox/Group';
+import { EntityReference } from 'generated/type/entityReference';
 import React, { ReactNode } from 'react';
 
 export enum DropDownType {
@@ -42,16 +45,17 @@ export type DropDownListProp = {
   searchString?: string;
   controlledSearchStr?: string;
   onSearchTextChange?: (text: string) => void;
-  selectedItems?: Array<string>;
+  selectedItems?: Array<string> | EntityReference[];
   disabledItems?: Array<string>;
   hiddenItems?: Array<string>;
   showSearchBar?: boolean;
   showEmptyList?: boolean;
-  value?: string;
+  value?: string | undefined;
   onSelect?: (
     event: React.MouseEvent<HTMLElement, MouseEvent>,
     value?: string
   ) => void;
+  onChange?: ((checkedValue: CheckboxValueType[]) => void) | undefined;
   setIsOpen?: (value: boolean) => void;
   groupType?: GroupType;
   domPosition?: DOMRect;
@@ -59,6 +63,8 @@ export type DropDownListProp = {
   widthClass?: string;
   getTotalCountForGroup?: (groupName: string) => number;
   removeOwner?: () => void;
+  isMultipleSelect?: boolean;
+  onClickUserTag?: (_e: CheckboxChangeEvent, itemId: string) => void;
 };
 
 export type DropDownProp = {

@@ -12,17 +12,16 @@
  */
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { Button, Col, Input, Row, Space, Tooltip, Typography } from 'antd';
+import { CheckboxChangeEvent } from 'antd/lib/checkbox';
 import Description from 'components/common/description/Description';
 import ProfilePicture from 'components/common/ProfilePicture/ProfilePicture';
 import DropDownList from 'components/dropdown/DropDownList';
-import ReviewerModal from 'components/Modals/ReviewerModal/ReviewerModal.component';
 import { OperationPermission } from 'components/PermissionProvider/PermissionProvider.interface';
 import { WILD_CARD_CHAR } from 'constants/char.constants';
 import { getUserPath } from 'constants/constants';
-import { NO_PERMISSION_FOR_ACTION } from 'constants/HelperTextUtil';
 import { EntityReference, Glossary } from 'generated/entity/data/glossary';
 import { GlossaryTerm } from 'generated/entity/data/glossaryTerm';
-import { cloneDeep, debounce, includes, isEqual } from 'lodash';
+import { cloneDeep, debounce, isEqual, uniqBy } from 'lodash';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -123,6 +122,19 @@ const GlossaryHeader = ({
       return newState;
     });
   };
+
+  const handleSelectReviewerDropdown = () => {
+    setShowReviewerModal((visible) => {
+      const newState = !visible;
+
+      if (newState) {
+        getOwnerSearch();
+      }
+
+      return newState;
+    });
+  };
+
   const getOwnerSuggestion = useCallback(
     (qSearchText = '') => {
       setIsUserLoading(true);
@@ -209,23 +221,44 @@ const GlossaryHeader = ({
     setListVisible(false);
   };
 
-  const handleReviewerSave = (data: Array<EntityReference>) => {
-    if (!isEqual(data, selectedData.reviewers)) {
+  const onRemoveReviewer = () => {
+    const updatedData = {
+      ...selectedData,
+      owner: undefined,
+    };
+    onUpdate(updatedData);
+  };
+
+  const handleReviewerSave = () => {
+    setShowReviewerModal(false);
+  };
+
+  const onClickUserTag = (_e: CheckboxChangeEvent, itemId: string) => {
+    const removedId = !_e.target.checked ? '' : itemId;
+    console.log('removedId:', _e.target.checked, removedId);
+
+    if (selectedData.reviewers) {
       let updatedGlossary = cloneDeep(selectedData);
-      const oldReviewer = data.filter((d) =>
-        includes(selectedData.reviewers, d)
+
+      const oldReviewers: EntityReference[] = selectedData.reviewers?.map(
+        (reviewer) => ({ id: reviewer.id, type: 'user' })
       );
-      const newReviewer = data
-        .filter((d) => !includes(selectedData.reviewers, d))
-        .map((d) => ({ id: d.id, type: d.type }));
+
+      const newReviewer: EntityReference[] = [{ id: itemId, type: 'user' }];
+      const updatedReviewers =
+        itemId && _e.target.checked
+          ? uniqBy([...oldReviewers, ...newReviewer], 'id')
+          : uniqBy([...oldReviewers, ...newReviewer], 'id').filter(
+              (reviewer) => reviewer.id !== itemId
+            );
+
       updatedGlossary = {
         ...updatedGlossary,
-        reviewers: [...oldReviewer, ...newReviewer],
+        reviewers: updatedReviewers,
       };
 
       onUpdate(updatedGlossary);
     }
-    setShowReviewerModal(false);
   };
 
   useEffect(() => {
@@ -269,7 +302,7 @@ const GlossaryHeader = ({
               title={
                 editDisplayNamePermission
                   ? t('label.edit-entity', { entity: t('label.name') })
-                  : NO_PERMISSION_FOR_ACTION
+                  : t('message.no-permission-for-action')
               }>
               <Button
                 disabled={!editDisplayNamePermission}
@@ -313,8 +346,10 @@ const GlossaryHeader = ({
                 placement="topRight"
                 title={
                   permissions.EditAll || permissions.EditOwner
-                    ? 'Update Owner'
-                    : NO_PERMISSION_FOR_ACTION
+                    ? t('label.update-entity', {
+                        entity: t('label.owner'),
+                      })
+                    : t('message.no-permission-for-action')
                 }>
                 <Button
                   className="flex-center p-0"
@@ -381,8 +416,8 @@ const GlossaryHeader = ({
                       <Tooltip
                         title={
                           permissions.EditAll
-                            ? 'Remove Reviewer'
-                            : NO_PERMISSION_FOR_ACTION
+                            ? t('label.remove-reviewer')
+                            : t('message.no-permission-for-action')
                         }>
                         <Button
                           className="p-0 flex-center"
@@ -408,7 +443,11 @@ const GlossaryHeader = ({
             <Tooltip
               placement="topRight"
               title={
-                permissions.EditAll ? 'Add Reviewer' : NO_PERMISSION_FOR_ACTION
+                permissions.EditAll
+                  ? t('label.add-entity', {
+                      entity: t('label.reviewer'),
+                    })
+                  : t('message.no-permission-for-action')
               }>
               <Button
                 className="p-0 flex-center"
@@ -424,9 +463,28 @@ const GlossaryHeader = ({
                 }
                 size="small"
                 type="text"
-                onClick={() => setShowReviewerModal(true)}
+                onClick={handleSelectReviewerDropdown}
               />
             </Tooltip>
+            {showReviewerModal && (
+              <DropDownList
+                isMultipleSelect
+                showEmptyList
+                controlledSearchStr={searchText}
+                dropDownList={listOwners}
+                groupType="tab"
+                horzPosRight={false}
+                isLoading={isUserLoading}
+                listGroups={['Users']}
+                removeOwner={onRemoveReviewer}
+                selectedItems={selectedData.reviewers}
+                showSearchBar={isCurrentUserAdmin()}
+                value={selectedData.owner?.id || ''}
+                onClickUserTag={onClickUserTag}
+                onSearchTextChange={handleOwnerSearch}
+                onSelect={handleReviewerSave}
+              />
+            )}
           </div>
         </Space>
       </Col>
@@ -441,15 +499,6 @@ const GlossaryHeader = ({
           onDescriptionUpdate={onDescriptionUpdate}
         />
       </Col>
-      <ReviewerModal
-        header={t('label.add-entity', {
-          entity: t('label.reviewer'),
-        })}
-        reviewer={selectedData.reviewers}
-        visible={showReviewerModal}
-        onCancel={() => setShowReviewerModal(false)}
-        onSave={handleReviewerSave}
-      />
     </Row>
   );
 };
