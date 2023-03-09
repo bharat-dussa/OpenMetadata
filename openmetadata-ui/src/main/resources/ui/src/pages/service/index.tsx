@@ -288,9 +288,22 @@ const ServicePage: FunctionComponent = () => {
     return new Promise<void>((resolve, reject) => {
       triggerIngestionPipelineById(id)
         .then((res) => {
-          if (res.data) {
+          if (res.data as IngestionPipeline) {
             resolve();
-            getAllIngestionWorkflows();
+            const rowIndex = ingestions.findIndex((row) => row.id === id);
+
+            const updatedRow = {
+              ...ingestions[rowIndex],
+              pipelineStatuses: (res.data as IngestionPipeline)
+                ?.pipelineStatuses, // Updated value
+            };
+            const updatedData = [
+              ...ingestions.slice(0, rowIndex),
+              updatedRow,
+              ...ingestions.slice(rowIndex + 1),
+            ];
+
+            setIngestions(updatedData);
           } else {
             reject();
             showErrorToast(
@@ -322,7 +335,20 @@ const ServicePage: FunctionComponent = () => {
           if (res.data) {
             resolve();
             setTimeout(() => {
-              getAllIngestionWorkflows();
+              const rowIndex = ingestions.findIndex((row) => row.id === id);
+
+              const updatedRow = {
+                ...ingestions[rowIndex],
+                fullyQualifiedName: (res.data as IngestionPipeline)
+                  ?.fullyQualifiedName,
+              };
+              const updatedData = [
+                ...ingestions.slice(0, rowIndex),
+                updatedRow,
+                ...ingestions.slice(rowIndex + 1),
+              ];
+
+              setIngestions(updatedData);
               setIsLoading(false);
             }, 500);
           } else {
@@ -347,7 +373,19 @@ const ServicePage: FunctionComponent = () => {
     enableDisableIngestionPipelineById(id)
       .then((res) => {
         if (res.data) {
-          getAllIngestionWorkflows();
+          const rowIndex = ingestions.findIndex((row) => row.id === id);
+
+          const updatedRow = {
+            ...ingestions[rowIndex],
+            enabled: (res.data as IngestionPipeline)?.enabled, // Updated value
+          };
+          const updatedData = [
+            ...ingestions.slice(0, rowIndex),
+            updatedRow,
+            ...ingestions.slice(rowIndex + 1),
+          ];
+
+          setIngestions(updatedData);
         } else {
           throw t('server.unexpected-response');
         }
@@ -365,7 +403,14 @@ const ServicePage: FunctionComponent = () => {
       deleteIngestionPipelineById(id)
         .then(() => {
           resolve();
-          getAllIngestionWorkflows();
+          const rowIndex = ingestions.findIndex((row) => row.id === id);
+
+          const updatedData = [
+            ...ingestions.slice(0, rowIndex),
+            ...ingestions.slice(rowIndex + 1),
+          ];
+
+          setIngestions(updatedData);
         })
         .catch((error: AxiosError) => {
           showErrorToast(
@@ -887,7 +932,7 @@ const ServicePage: FunctionComponent = () => {
           <Ingestion
             isRequiredDetailsAvailable
             airflowEndpoint={airflowEndpoint}
-            currrentPage={ingestionCurrentPage}
+            currentPage={ingestionCurrentPage}
             deleteIngestion={deleteIngestionById}
             deployIngestion={deployIngestion}
             handleEnableDisableIngestion={handleEnableDisableIngestion}
