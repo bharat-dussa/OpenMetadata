@@ -58,7 +58,7 @@ const DropDown: React.FC<DropDownProp> = ({
           <CheckBoxDropDownList
             disabledItems={disabledItems}
             dropDownList={dropDownList}
-            selectedItems={selectedItems}
+            selectedItems={selectedItems as Array<string>}
             setIsOpen={setIsOpen}
             onSelect={onSelect}
           />
@@ -100,7 +100,7 @@ const DropDown: React.FC<DropDownProp> = ({
                   <span className="tw-flex tw-flex-wrap tw--my-0.5">
                     {dropDownList.map((item: DropDownListItem) => {
                       if (
-                        selectedItems
+                        (selectedItems as Array<string>)
                           ?.filter((item) => !hiddenItems.includes(item))
                           .includes(item.value as string)
                       ) {

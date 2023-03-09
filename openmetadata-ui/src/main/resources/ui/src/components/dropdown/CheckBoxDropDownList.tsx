@@ -49,7 +49,9 @@ const CheckBoxDropDownList = ({
                 onClick={(e) => onSelect && onSelect(e, item.value as string)}>
                 <input
                   checked={Boolean(
-                    selectedItems?.includes(item.value as string)
+                    (selectedItems as Array<string>)?.includes(
+                      item.value as string
+                    )
                   )}
                   className="tw-ml-3 tw-mr-2 tw-align-middle custom-checkbox"
                   disabled={Boolean(
