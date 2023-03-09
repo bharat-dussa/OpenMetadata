@@ -281,6 +281,27 @@ const ServicePage: FunctionComponent = () => {
       });
   };
 
+  const updateCurrentSelectedIngestion = (
+    id: string,
+    data: IngestionPipeline | undefined,
+    updateKey: keyof IngestionPipeline,
+    isDeleted = false
+  ) => {
+    const rowIndex = ingestions.findIndex((row) => row.id === id);
+
+    const updatedRow = !isUndefined(data)
+      ? { ...ingestions[rowIndex], [updateKey]: data[updateKey] }
+      : null;
+
+    const updatedData = isDeleted
+      ? ingestions.filter((_, index) => index !== rowIndex)
+      : updatedRow
+      ? Object.assign([...ingestions], { [rowIndex]: updatedRow })
+      : [...ingestions];
+
+    setIngestions(updatedData);
+  };
+
   const triggerIngestionById = (
     id: string,
     displayName: string
@@ -288,9 +309,10 @@ const ServicePage: FunctionComponent = () => {
     return new Promise<void>((resolve, reject) => {
       triggerIngestionPipelineById(id)
         .then((res) => {
-          if (res.data) {
+          if (res.data as IngestionPipeline) {
             resolve();
-            getAllIngestionWorkflows();
+
+            updateCurrentSelectedIngestion(id, res.data, 'pipelineStatuses');
           } else {
             reject();
             showErrorToast(
@@ -322,7 +344,12 @@ const ServicePage: FunctionComponent = () => {
           if (res.data) {
             resolve();
             setTimeout(() => {
-              getAllIngestionWorkflows();
+              updateCurrentSelectedIngestion(
+                id,
+                res.data,
+                'fullyQualifiedName'
+              );
+
               setIsLoading(false);
             }, 500);
           } else {
@@ -347,7 +374,7 @@ const ServicePage: FunctionComponent = () => {
     enableDisableIngestionPipelineById(id)
       .then((res) => {
         if (res.data) {
-          getAllIngestionWorkflows();
+          updateCurrentSelectedIngestion(id, res.data, 'enabled');
         } else {
           throw t('server.unexpected-response');
         }
@@ -365,7 +392,7 @@ const ServicePage: FunctionComponent = () => {
       deleteIngestionPipelineById(id)
         .then(() => {
           resolve();
-          getAllIngestionWorkflows();
+          updateCurrentSelectedIngestion(id, undefined, 'enabled', true);
         })
         .catch((error: AxiosError) => {
           showErrorToast(
@@ -887,7 +914,7 @@ const ServicePage: FunctionComponent = () => {
           <Ingestion
             isRequiredDetailsAvailable
             airflowEndpoint={airflowEndpoint}
-            currrentPage={ingestionCurrentPage}
+            currentPage={ingestionCurrentPage}
             deleteIngestion={deleteIngestionById}
             deployIngestion={deployIngestion}
             handleEnableDisableIngestion={handleEnableDisableIngestion}
