@@ -35,7 +35,6 @@ import PageLayoutV1 from 'components/containers/PageLayoutV1';
 import Loader from 'components/Loader/Loader';
 import EntityDeleteModal from 'components/Modals/EntityDeleteModal/EntityDeleteModal';
 import FormModal from 'components/Modals/FormModal';
-import { ModalWithMarkdownEditor } from 'components/Modals/ModalWithMarkdownEditor/ModalWithMarkdownEditor';
 import { usePermissionProvider } from 'components/PermissionProvider/PermissionProvider';
 import {
   OperationPermission,
@@ -108,7 +107,7 @@ const TagsPage = () => {
     useState<boolean>(false);
   const [isAddingClassification, setIsAddingClassification] =
     useState<boolean>(false);
-  const [isEditTag, setIsEditTag] = useState<boolean>(false);
+
   const [isAddingTag, setIsAddingTag] = useState<boolean>(false);
   const [editTag, setEditTag] = useState<Tag>();
   const [error, setError] = useState<string>('');
@@ -129,6 +128,8 @@ const TagsPage = () => {
   const [paging, setPaging] = useState<Paging>({} as Paging);
   const [currentPage, setCurrentPage] = useState<number>(INITIAL_PAGING_VALUE);
   const [isTagsLoading, setIsTagsLoading] = useState(false);
+  const [isTagEditing, setIsTagEditing] = useState(false);
+
   const { t } = useTranslation();
   const createClassificationPermission = useMemo(
     () =>
@@ -551,14 +552,15 @@ const TagsPage = () => {
     }
   };
 
-  const updatePrimaryTag = async (updatedHTML: string) => {
-    if (!isUndefined(editTag)) {
-      const patchData = compare(editTag, {
-        ...editTag,
-        description: updatedHTML,
+  const updatePrimaryTag = async (data: Tag, previousTagData: Tag) => {
+    if (!isUndefined(previousTagData)) {
+      const patchData = compare(previousTagData, {
+        ...previousTagData,
+        description: data.description,
+        name: isEmpty(data.name) ? previousTagData.name : data.name,
       });
       try {
-        const response = await patchTag(editTag.id || '', patchData);
+        const response = await patchTag(previousTagData.id || '', patchData);
         if (response) {
           await fetchCurrentClassification(
             currentClassification?.name as string,
@@ -570,7 +572,7 @@ const TagsPage = () => {
       } catch (error) {
         showErrorToast(error as AxiosError);
       } finally {
-        setIsEditTag(false);
+        setIsTagEditing(false);
         setEditTag(undefined);
       }
     }
@@ -709,7 +711,41 @@ const TagsPage = () => {
       </LeftPanelCard>
     );
   };
+  const handleActionEditTag = (tag: Tag) => {
+    setIsTagEditing(true);
+    setEditTag(tag);
+  };
 
+  const handleTagModalCancel = () => {
+    setIsAddingTag(false);
+    setIsTagEditing(false);
+  };
+
+  const getTagInitialData = (isTagEditing: boolean, tag: Tag) => {
+    if (isTagEditing && !isUndefined(tag)) {
+      return {
+        name: tag.name,
+        description: tag.description,
+      };
+    }
+
+    return {
+      name: '',
+      description: '',
+    };
+  };
+
+  const handleTagOnSave = (
+    data: Classification | Tag,
+    previousTagData: Tag,
+    isTagEditing: boolean
+  ) => {
+    if (isTagEditing) {
+      updatePrimaryTag(data as Tag, previousTagData);
+    } else {
+      createPrimaryTag(data as Classification);
+    }
+  };
   const tableColumn = useMemo(
     () =>
       [
@@ -737,24 +773,6 @@ const TagsPage = () => {
                     </span>
                   )}
                 </div>
-
-                {(classificationPermissions.EditDescription ||
-                  classificationPermissions.EditAll) && (
-                  <button
-                    className="tw-self-start tw-w-8 tw-h-auto tw-opacity-0 tw-ml-1 group-hover:tw-opacity-100 focus:tw-outline-none"
-                    onClick={() => {
-                      setIsEditTag(true);
-                      setEditTag(record);
-                    }}>
-                    <SVGIcons
-                      alt="edit"
-                      data-testid="editTagDescription"
-                      icon="icon-edit"
-                      title="Edit"
-                      width="16px"
-                    />
-                  </button>
-                )}
               </div>
               <div className="tw-mt-1" data-testid="usage">
                 <span className="tw-text-grey-muted tw-mr-1">
@@ -783,16 +801,35 @@ const TagsPage = () => {
           width: 120,
           align: 'center',
           render: (_, record: Tag) => (
-            <button
-              className="link-text"
-              data-testid="delete-tag"
-              disabled={
-                record.provider === ProviderType.System ||
-                !classificationPermissions.EditAll
-              }
-              onClick={() => handleActionDeleteTag(record)}>
-              {getDeleteIcon(deleteTags, record.id)}
-            </button>
+            <Space>
+              <Button
+                className="p-0"
+                data-testid="tag-edit-icon"
+                disabled={
+                  record.provider === ProviderType.System ||
+                  !classificationPermissions.EditAll
+                }
+                size="small"
+                type="text"
+                onClick={() => handleActionEditTag(record)}>
+                <SVGIcons
+                  alt="icon-tag"
+                  className="tw-mx-1"
+                  icon={Icons.EDIT}
+                  width="16"
+                />
+              </Button>
+              <button
+                className="link-text"
+                data-testid="delete-tag"
+                disabled={
+                  record.provider === ProviderType.System ||
+                  !classificationPermissions.EditAll
+                }
+                onClick={() => handleActionDeleteTag(record)}>
+                {getDeleteIcon(deleteTags, record.id)}
+              </button>
+            </Space>
           ),
         },
       ] as ColumnsType<Tag>,
@@ -987,21 +1024,6 @@ const TagsPage = () => {
               />
             )}
 
-            <ModalWithMarkdownEditor
-              header={t('label.edit-description-for', {
-                entityName: editTag?.name,
-              })}
-              placeholder={t('label.enter-entity', {
-                entity: t('label.description'),
-              })}
-              value={editTag?.description as string}
-              visible={isEditTag}
-              onCancel={() => {
-                setIsEditTag(false);
-                setEditTag(undefined);
-              }}
-              onSave={updatePrimaryTag}
-            />
             <FormModal
               showHiddenFields
               errorData={errorDataClassification}
@@ -1020,26 +1042,36 @@ const TagsPage = () => {
               }}
               onSave={(data) => createCategory(data as Classification)}
             />
+
             <FormModal
               errorData={errorDataTag}
               form={Form}
-              header={t('message.adding-new-tag', {
-                categoryName:
-                  currentClassification?.displayName ??
-                  currentClassification?.name,
-              })}
-              initialData={{
-                name: '',
-                description: '',
-              }}
+              header={
+                isTagEditing
+                  ? t('message.editing-tag-name', {
+                      tagName: editTag?.displayName ?? editTag?.name,
+                    })
+                  : t('message.adding-new-tag', {
+                      categoryName:
+                        currentClassification?.displayName ??
+                        currentClassification?.name,
+                    })
+              }
+              initialData={getTagInitialData(isTagEditing, editTag as Tag)}
               isSaveButtonDisabled={!isEmpty(errorDataTag)}
-              visible={isAddingTag}
-              onCancel={() => setIsAddingTag(false)}
+              visible={isAddingTag || isTagEditing}
+              onCancel={handleTagModalCancel}
               onChange={(data) => {
                 setErrorDataTag({});
                 onNewTagChange(data as Classification);
               }}
-              onSave={(data) => createPrimaryTag(data as Classification)}
+              onSave={(data) =>
+                handleTagOnSave(
+                  data as Classification | Tag,
+                  editTag as Tag,
+                  isTagEditing
+                )
+              }
             />
 
             <EntityDeleteModal

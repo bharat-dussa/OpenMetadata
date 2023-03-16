@@ -921,6 +921,7 @@
     "discover-your-data-and-unlock-the-value-of-data-assets": "Discover your data and unlock the value of data assets.",
     "drag-and-drop-files-here": "Drag & drop files here",
     "edit-service-entity-connection": "Edit {{entity}} Service Connection",
+    "editing-tag-name": "Edit tag {{tagName}}",
     "elastic-search-message": "Ensure that your Elasticsearch indexes are up-to-date by syncing, or recreating all indexes.",
     "elasticsearch-setup": "Please follow the instructions here to set up Metadata ingestion and index them into Elasticsearch.",
     "email-is-invalid": "Invalid Email.",
